@@ -1,778 +1,838 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title> Kỹ Thuật (230 Câu)</title>
-    <style>
-        :root {
-            --primary-color: #007bff;
-            --correct-color: #28a745;
-            --incorrect-color: #dc3545;
-            --text-color: #212529;
-            --light-text-color: #6c757d;
-            --bg-color: #f8f9fa;
-            --container-bg-color: #ffffff;
-            --border-color: #dee2e6;
-        }
-
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-
-        body {
-            font-family: 'Segoe UI', Arial, sans-serif;
-            line-height: 1.6;
-            color: var(--text-color);
-            background-color: var(--bg-color);
-            padding-top: 80px;
-        }
-
-        #main-container {
-            max-width: 900px;
-            margin: 20px auto;
-            background-color: var(--container-bg-color);
-            border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-            overflow: hidden;
-        }
-        
-        #content-padding { padding: 30px; }
-
-        h1, h2 { text-align: center; color: #0056b3; }
-        h1 { margin-bottom: 10px; }
-        h2 { margin-bottom: 20px; color: var(--text-color); font-size: 1.5em; }
-
-        /* Setup Screen Styles */
-        #setup-container, #final-result-screen, #leaderboard-screen {
-            text-align: center;
-            padding: 20px 0;
-        }
-
-        /* Name Input Styles */
-        .input-group {
-            margin-bottom: 20px;
-            text-align: center;
-        }
-        .input-group label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 600;
-        }
-        #username-input {
-            padding: 10px 15px;
-            font-size: 1.1em;
-            border: 2px solid var(--border-color);
-            border-radius: 8px;
-            width: 80%;
-            max-width: 300px;
-            transition: border-color 0.3s;
-        }
-        #username-input:focus {
-            border-color: var(--primary-color);
-            outline: none;
-        }
-
-        /* Result & Leaderboard Styles */
-        #final-score-text { font-size: 1.8em; font-weight: 700; color: var(--correct-color); margin: 20px 0; }
-        
-        table.leaderboard-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-            margin-bottom: 20px;
-        }
-        table.leaderboard-table th, table.leaderboard-table td {
-            padding: 12px 15px;
-            border-bottom: 1px solid #ddd;
-            text-align: left;
-        }
-        table.leaderboard-table th {
-            background-color: var(--primary-color);
-            color: white;
-            font-weight: 600;
-        }
-        table.leaderboard-table tr:nth-child(even) { background-color: #f2f2f2; }
-        table.leaderboard-table tr:hover { background-color: #e9ecef; }
-        .rank-1 { color: gold; font-weight: bold; }
-        .rank-2 { color: silver; font-weight: bold; }
-        .rank-3 { color: #cd7f32; font-weight: bold; }
-
-        /* Time Selection */
-        #time-selection {
-            margin: 20px 0; display: flex; justify-content: center;
-            align-items: center; flex-wrap: wrap; gap: 15px;
-        }
-        #time-selection h4 { width: 100%; margin-bottom: 10px; font-weight: 500; }
-        #time-selection label { cursor: pointer; padding: 5px 10px; }
-
-        /* Buttons */
-        .modern-button {
-            font-size: 1.1em; padding: 12px 24px; margin: 10px;
-            cursor: pointer; border-radius: 8px; border: none;
-            font-weight: 600; color: white;
-            transition: all 0.2s ease;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        .modern-button:hover { opacity: 0.9; transform: translateY(-2px); }
-        .modern-button:disabled { background-color: #ccc; cursor: not-allowed; transform: none; }
-        
-        #start-button { background-color: var(--primary-color); }
-        #shuffle-button { background-color: #6c757d; }
-        #shuffle-button.shuffled { background-color: var(--correct-color); }
-        .btn-restart { background-color: #17a2b8; }
-        .btn-leaderboard { background-color: #ffc107; color: #212529; }
-        
-        #submit-button {
-            position: fixed; right: 20px; bottom: 20px;
-            z-index: 200; background-color: var(--incorrect-color);
-            display: none; border-radius: 50%;
-            width: 60px; height: 60px; padding: 0; font-size: 1em;
-        }
-        
-        #quiz-container { display: none; }
-        
-        /* Sticky Header */
-        #sticky-header {
-            position: fixed; top: 0; left: 0; width: 100%;
-            background-color: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
-            padding: 15px 20px; z-index: 100;
-            border-bottom: 1px solid var(--border-color);
-            display: flex; justify-content: space-between; align-items: center;
-        }
-        
-        #user-credit { font-weight: 600; color: var(--light-text-color); font-size: 1.1em; }
-        #timer-display { font-size: 1.8em; font-weight: 700; color: var(--primary-color); }
-        #timer-display.ending { color: var(--incorrect-color); }
-        
-        /* Questions */
-        .question-block {
-            margin-bottom: 25px; padding: 25px; border-radius: 12px;
-            background-color: #ffffff; box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-            border: 1px solid transparent;
-        }
-        .question-text { font-weight: 600; margin-bottom: 20px; font-size: 1.15em; }
-
-        .options-container label {
-            display: block; background: var(--bg-color);
-            padding: 15px; margin-bottom: 10px; border-radius: 8px;
-            border: 2px solid var(--bg-color); cursor: pointer;
-            transition: all 0.2s ease;
-        }
-        .options-container input[type="radio"] { display: none; }
-        .options-container label:hover { border-color: var(--primary-color); }
-        
-        .question-block.correct .options-container .correct-selection label {
-            border-color: var(--correct-color); background-color: #e9f7ef;
-            color: #1d643b; font-weight: 600;
-        }
-        .question-block.correct .options-container .correct-selection span::before { content: '✔ '; }
-        
-        .question-block.incorrect .options-container div.incorrect-option label {
-             border-color: var(--incorrect-color); background-color: #fbebed;
-        }
-        
-        fieldset { border: none; padding: 0; margin: 0; }
-        fieldset:disabled label { cursor: not-allowed; opacity: 0.8; }
-
-        @media (max-width: 768px) {
-            body { padding-top: 70px; }
-            #main-container { margin: 0; border-radius: 0; }
-            #content-padding { padding: 15px; }
-            h1 { font-size: 1.5em; }
-            #sticky-header { padding: 10px 15px; }
-            #timer-display { font-size: 1.5em; }
-            #username-input { width: 100%; }
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>UMP Master Data Architecture</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #0a0e1a; }
+  </style>
 </head>
 <body>
-    <div id="sticky-header" style="display:none;">
-        <span id="user-credit">Người dùng</span>
-        <div id="timer-display"></div>
-    </div>
+  <div id="root"></div>
 
-    <button id="submit-button" class="modern-button">Nộp</button>
+  <!-- React + ReactDOM (development builds) -->
+  <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+  <!-- Babel Standalone to transpile JSX in-browser -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
-    <div id="main-container">
-        <div id="content-padding">
-            <div id="setup-container">
-                <h1>Kỹ Thuật Thi Công</h1>
-                <h2>Thiết lập bài làm (Tổng hợp 6 Chương)</h2>
-                
-                <div class="input-group">
-                    <label for="username-input">Nhập họ và tên của bạn:</label>
-                    <input type="text" id="username-input" placeholder="Ví dụ: Nguyễn Văn A">
-                </div>
-                
-                <div id="time-selection">
-                    <h4>Chọn thời gian làm bài:</h4>
-                    <div><input type="radio" name="time" value="45" id="t45" checked><label for="t45">45 phút</label></div>
-                    <div><input type="radio" name="time" value="60" id="t60"><label for="t60">60 phút</label></div>
-                    <div><input type="radio" name="time" value="90" id="t90"><label for="t90">90 phút</label></div>
-                </div>
+  <script type="text/babel">
+    const { useState, useCallback } = React;
 
-                <p>Nhấn "Xáo trộn câu hỏi" nếu bạn muốn thay đổi thứ tự.<br>Sẵn sàng để bắt đầu?</p>
-                <button id="shuffle-button" class="modern-button">Xáo trộn câu hỏi</button>
-                <button id="start-button" class="modern-button">Bắt đầu làm bài</button>
-                <br>
-                <button class="modern-button btn-leaderboard" onclick="showLeaderboard(true)">Xem Bảng Xếp Hạng Online</button>
+    const COLORS = {
+      bg: "#0a0e1a",
+      surface: "#111827",
+      surfaceHover: "#1a2236",
+      card: "#151d2e",
+      border: "#1e293b",
+      borderActive: "#3b82f6",
+      text: "#e2e8f0",
+      textMuted: "#94a3b8",
+      textDim: "#64748b",
+      accent: "#3b82f6",
+      accentGlow: "rgba(59,130,246,0.15)",
+      green: "#10b981",
+      greenGlow: "rgba(16,185,129,0.15)",
+      amber: "#f59e0b",
+      amberGlow: "rgba(245,158,11,0.15)",
+      rose: "#f43f5e",
+      roseGlow: "rgba(244,63,94,0.15)",
+      purple: "#a855f7",
+      purpleGlow: "rgba(168,85,247,0.15)",
+      cyan: "#06b6d4",
+      cyanGlow: "rgba(6,182,212,0.15)",
+      teal: "#14b8a6",
+      tealGlow: "rgba(20,184,166,0.15)",
+    };
+
+    const FONTS = {
+      display: "'Playfair Display', Georgia, serif",
+      body: "'Source Sans 3', 'Segoe UI', sans-serif",
+      mono: "'JetBrains Mono', 'Fira Code', monospace",
+    };
+
+    const masterDataTree = [
+      {
+        id: "PH0",
+        code: "PH0",
+        name: "Enterprise Orchestrator (EO)",
+        desc: "Trục liên thông trung tâm – Bộ não điều phối toàn bộ hệ sinh thái",
+        color: COLORS.cyan,
+        glow: COLORS.cyanGlow,
+        icon: "🧠",
+        children: [
+          {
+            id: "EO-API",
+            code: "EO-API",
+            name: "API Gateway & ESB",
+            desc: "Cổng kết nối chung, định tuyến dữ liệu giữa các Best-of-Breed",
+            items: ["REST/GraphQL Gateway", "Message Queue (RabbitMQ/Kafka)", "Service Registry & Discovery", "Rate Limiting & Circuit Breaker"],
+          },
+          {
+            id: "EO-IDM",
+            code: "EO-IDM",
+            name: "Identity & Access Hub",
+            desc: "SSO / RBAC / Phân quyền đa tầng cho toàn hệ thống",
+            items: ["Single Sign-On (SAML/OIDC)", "Role-Based Access Control", "Multi-tenant Permission Matrix", "Audit Trail & Session Mgmt"],
+          },
+          {
+            id: "EO-MDM",
+            code: "EO-MDM",
+            name: "Master Data Management (MDM)",
+            desc: "Quản trị golden record, data quality, deduplication",
+            items: ["Golden Record Engine", "Data Quality Rules", "Deduplication & Matching", "Data Lineage Tracking"],
+          },
+          {
+            id: "EO-ETL",
+            code: "EO-ETL",
+            name: "ETL & Data Pipeline",
+            desc: "Đồng bộ, chuyển đổi, làm sạch dữ liệu real-time & batch",
+            items: ["Real-time CDC (Change Data Capture)", "Batch ETL Scheduler", "Data Transformation Rules", "Error Handling & Retry Logic"],
+          },
+          {
+            id: "EO-AI",
+            code: "EO-AI",
+            name: "AI Agent Orchestration",
+            desc: "Điều phối AI Agents tiêu thụ Master Data chuẩn hóa",
+            items: ["Agent Registry", "Prompt Template Store", "RAG Pipeline (Vector DB)", "Model Gateway & Routing"],
+          },
+        ],
+      },
+      {
+        id: "PH1",
+        code: "PH1",
+        name: "Quản trị Hệ thống & Master Data",
+        desc: "Phân hệ 1 – Nền tảng quản trị tập trung, dữ liệu nền tảng",
+        color: COLORS.accent,
+        glow: COLORS.accentGlow,
+        icon: "⚙️",
+        children: [
+          {
+            id: "MD-ORG",
+            code: "MD-ORG",
+            name: "Tổ chức – Nhân sự (Organization)",
+            desc: "Cây tổ chức đa chiều, phục vụ cả 3 hệ sinh thái",
+            items: [
+              "org_unit: Đơn vị tổ chức (Khoa/Phòng/Bộ môn/TT/BV)",
+              "org_hierarchy: Cây phân cấp đa chiều (hành chính / học thuật / y tế)",
+              "org_type: Loại đơn vị (đào tạo | nghiên cứu | lâm sàng | hỗ trợ)",
+              "position: Vị trí chức danh (GS/PGS/TS/BS/DD/KTV...)",
+              "employee: Hồ sơ nhân sự tích hợp (giảng viên kiêm bác sĩ)",
+              "employee_role_matrix: Ma trận vai trò đa hệ sinh thái",
+              "cost_center: Trung tâm chi phí gắn đơn vị",
+            ],
+          },
+          {
+            id: "MD-GEO",
+            code: "MD-GEO",
+            name: "Địa lý – Vị trí (Location)",
+            desc: "Quản lý cơ sở vật chất đa campus",
+            items: [
+              "campus: Cơ sở (CS1 Hải Bà Trưng / CS2 Bình Dương / BV ĐHYD)",
+              "building: Tòa nhà / Khu",
+              "room: Phòng học / Lab / Phòng khám / Phòng mổ",
+              "room_type: Loại phòng (giảng đường | lab | clinic | OR | admin)",
+              "equipment_location: Vị trí thiết bị y tế / giảng dạy",
+              "geo_zone: Vùng địa lý (Quận/Huyện – phục vụ KCB & tuyển sinh)",
+            ],
+          },
+          {
+            id: "MD-FIN",
+            code: "MD-FIN",
+            name: "Tài chính – Kế toán (Finance)",
+            desc: "Hệ thống tài khoản, ngân sách đa nguồn",
+            items: [
+              "chart_of_accounts: Hệ thống TK kế toán (TT107/200)",
+              "fund_source: Nguồn vốn (NSNN / học phí / BHYT / viện trợ / NC)",
+              "budget_code: Mã ngân sách theo chương trình / dự án",
+              "cost_element: Yếu tố chi phí",
+              "revenue_type: Loại thu (học phí / lệ phí / viện phí / dịch vụ)",
+              "bank_account: Tài khoản ngân hàng",
+              "tax_code: Mã thuế / Thuế suất",
+              "payment_term: Điều khoản thanh toán",
+              "vendor: Nhà cung cấp (thuốc / VTYT / thiết bị / dịch vụ)",
+              "customer: Đối tác / Cơ quan tài trợ / Bệnh nhân (mã hóa)",
+            ],
+          },
+          {
+            id: "MD-CAT",
+            code: "MD-CAT",
+            name: "Danh mục dùng chung (Shared Catalogs)",
+            desc: "Danh mục chuẩn quốc gia & quốc tế",
+            items: [
+              "icd10: Mã bệnh ICD-10 (Khám chữa bệnh)",
+              "icd9_cm: Mã thủ thuật / phẫu thuật",
+              "atc_code: Mã phân loại thuốc ATC",
+              "drug_catalog: Danh mục thuốc (BYT / BHXH)",
+              "medical_supply: Danh mục VTYT",
+              "isced: Mã ngành đào tạo quốc tế",
+              "moet_code: Mã ngành theo Bộ GD&ĐT",
+              "currency: Danh mục tiền tệ",
+              "country/province/district: Danh mục địa chính",
+              "ethnicity/religion/nationality: Danh mục nhân khẩu",
+              "academic_year/semester: Năm học / Học kỳ",
+              "document_type: Loại văn bản / công văn",
+            ],
+          },
+          {
+            id: "MD-WF",
+            code: "MD-WF",
+            name: "Quy trình & Workflow (Process)",
+            desc: "Mẫu quy trình nghiệp vụ chuẩn hóa",
+            items: [
+              "workflow_template: Mẫu quy trình phê duyệt",
+              "approval_matrix: Ma trận phê duyệt theo thẩm quyền",
+              "sla_definition: Cam kết thời gian xử lý",
+              "notification_template: Mẫu thông báo / email",
+              "form_template: Mẫu biểu mẫu điện tử",
+              "document_numbering: Quy tắc đánh số văn bản",
+            ],
+          },
+          {
+            id: "MD-SEC",
+            code: "MD-SEC",
+            name: "Bảo mật & Phân quyền (Security)",
+            desc: "Mô hình phân quyền RBAC đa tầng",
+            items: [
+              "role: Vai trò hệ thống",
+              "permission_set: Bộ quyền hạn",
+              "data_scope: Phạm vi dữ liệu (theo đơn vị / campus / khoa)",
+              "sensitivity_level: Mức nhạy cảm (PHI / PII / Public)",
+              "consent_type: Loại đồng ý (nghiên cứu / y tế / đào tạo)",
+              "audit_event_type: Loại sự kiện kiểm toán",
+            ],
+          },
+        ],
+      },
+      {
+        id: "PH-EDU",
+        code: "PH-EDU",
+        name: "Hệ sinh thái Đào tạo (Education)",
+        desc: "Master Data phục vụ đào tạo đa bậc Y – Dược – ĐD – KT",
+        color: COLORS.green,
+        glow: COLORS.greenGlow,
+        icon: "🎓",
+        children: [
+          {
+            id: "ED-PROG",
+            code: "ED-PROG",
+            name: "Chương trình đào tạo",
+            desc: "Quản lý CTĐT đa bậc, đa hệ",
+            items: [
+              "program: CTĐT (BS 6 năm / Dược sĩ / ĐD / ThS / TS / CKI / CKII)",
+              "program_version: Phiên bản CTĐT theo khóa",
+              "curriculum_block: Khối kiến thức (ĐC / cơ sở / chuyên ngành / LS)",
+              "course: Học phần / Môn học",
+              "course_prerequisite: Điều kiện tiên quyết",
+              "learning_outcome: Chuẩn đầu ra (CLO/PLO)",
+              "competency_framework: Khung năng lực (CanMEDS / ACGME)",
+            ],
+          },
+          {
+            id: "ED-STU",
+            code: "ED-STU",
+            name: "Sinh viên & Học viên",
+            desc: "Hồ sơ người học toàn diện",
+            items: [
+              "student: Hồ sơ sinh viên / học viên / NCS",
+              "student_status: Trạng thái (đang học / bảo lưu / tốt nghiệp)",
+              "enrollment: Đăng ký học phần",
+              "clinical_rotation: Phân công lâm sàng (khoa / BV / thời gian)",
+              "thesis_registration: Đăng ký luận văn / luận án",
+              "student_finance: Công nợ học phí / học bổng",
+            ],
+          },
+          {
+            id: "ED-EXAM",
+            code: "ED-EXAM",
+            name: "Kiểm tra & Đánh giá",
+            desc: "Ngân hàng đề thi, rubric đánh giá năng lực",
+            items: [
+              "exam_bank: Ngân hàng câu hỏi (MCQ / OSCE / Mini-CEX)",
+              "exam_type: Loại đánh giá (lý thuyết / thực hành / LS / vấn đáp)",
+              "grading_rubric: Rubric chấm điểm",
+              "osce_station: Trạm thi OSCE",
+              "assessment_blueprint: Ma trận đề thi",
+            ],
+          },
+        ],
+      },
+      {
+        id: "PH-RES",
+        code: "PH-RES",
+        name: "Hệ sinh thái Nghiên cứu (Research)",
+        desc: "Master Data phục vụ NCKH & chuyển giao công nghệ",
+        color: COLORS.purple,
+        glow: COLORS.purpleGlow,
+        icon: "🔬",
+        children: [
+          {
+            id: "RS-PROJ",
+            code: "RS-PROJ",
+            name: "Dự án nghiên cứu",
+            desc: "Quản lý đề tài từ đề xuất đến nghiệm thu",
+            items: [
+              "research_project: Đề tài NC (cấp trường / bộ / QG / QT)",
+              "project_phase: Giai đoạn (đề xuất / phê duyệt / triển khai / nghiệm thu)",
+              "funding_grant: Nguồn tài trợ NC",
+              "research_team: Nhóm nghiên cứu / PI / Co-PI",
+              "collaboration: Hợp tác quốc tế (MOU / MOA)",
+            ],
+          },
+          {
+            id: "RS-PUB",
+            code: "RS-PUB",
+            name: "Công bố khoa học",
+            desc: "Publication tracking & bibliometrics",
+            items: [
+              "publication: Bài báo (ISI/Scopus/trong nước)",
+              "journal: Tạp chí (Impact Factor / Quartile)",
+              "patent: Bằng sáng chế / Giải pháp hữu ích",
+              "conference: Hội nghị khoa học",
+              "citation_index: Chỉ số trích dẫn (h-index / i10)",
+            ],
+          },
+          {
+            id: "RS-ETH",
+            code: "RS-ETH",
+            name: "Đạo đức & Tuân thủ NC",
+            desc: "IRB, Ethics, Research Compliance",
+            items: [
+              "irb_protocol: Hồ sơ Hội đồng Đạo đức",
+              "informed_consent: Mẫu đồng ý tham gia NC",
+              "biobank_sample: Mẫu sinh phẩm lưu trữ",
+              "clinical_trial: Thử nghiệm lâm sàng (ClinicalTrials.gov)",
+              "research_compliance: Tuân thủ GCP / GLP / GDPR",
+            ],
+          },
+        ],
+      },
+      {
+        id: "PH-MED",
+        code: "PH-MED",
+        name: "Hệ sinh thái Y tế (Healthcare)",
+        desc: "Master Data phục vụ Khám chữa bệnh tại BV ĐHYD",
+        color: COLORS.rose,
+        glow: COLORS.roseGlow,
+        icon: "🏥",
+        children: [
+          {
+            id: "HC-PAT",
+            code: "HC-PAT",
+            name: "Bệnh nhân & Hồ sơ y tế",
+            desc: "EMR Master Data – Master Patient Index",
+            items: [
+              "patient: Hồ sơ bệnh nhân (MPI – Master Patient Index)",
+              "encounter_type: Loại lượt khám (ngoại trú / nội trú / CC / KSK)",
+              "insurance_card: Thẻ BHYT / Bảo hiểm thương mại",
+              "medical_record: Bệnh án điện tử (EMR)",
+              "allergy: Dị ứng / Phản ứng có hại (ADR)",
+              "vital_sign_type: Loại dấu hiệu sinh tồn",
+            ],
+          },
+          {
+            id: "HC-CLI",
+            code: "HC-CLI",
+            name: "Lâm sàng & Điều trị",
+            desc: "Dữ liệu lâm sàng chuẩn hóa",
+            items: [
+              "department_clinical: Khoa lâm sàng (Nội/Ngoại/Sản/Nhi...)",
+              "service_medical: Dịch vụ y tế (mã DM BYT)",
+              "procedure: Thủ thuật / Phẫu thuật",
+              "order_set: Bộ y lệnh mẫu",
+              "clinical_pathway: Phác đồ điều trị",
+              "nursing_care_plan: Kế hoạch chăm sóc điều dưỡng",
+            ],
+          },
+          {
+            id: "HC-PHAR",
+            code: "HC-PHAR",
+            name: "Dược & Vật tư Y tế",
+            desc: "Quản lý thuốc, VTYT toàn chuỗi cung ứng",
+            items: [
+              "drug: Thuốc (hoạt chất / biệt dược / liều / đường dùng)",
+              "drug_interaction: Tương tác thuốc",
+              "formulary: Danh mục thuốc BV (DMT BHYT)",
+              "medical_device: Thiết bị y tế",
+              "consumable: Vật tư tiêu hao",
+              "lot_tracking: Quản lý lô / hạn sử dụng",
+            ],
+          },
+          {
+            id: "HC-REV",
+            code: "HC-REV",
+            name: "Thanh toán & BHYT",
+            desc: "Revenue Cycle Management",
+            items: [
+              "fee_schedule: Bảng giá DV (BHYT / dịch vụ / yêu cầu)",
+              "drg: Nhóm chẩn đoán liên quan (DRG)",
+              "claim: Hồ sơ thanh toán BHXH",
+              "copay_rule: Quy tắc đồng chi trả",
+              "revenue_code: Mã doanh thu y tế",
+            ],
+          },
+        ],
+      },
+      {
+        id: "PH-CROSS",
+        code: "PH-CROSS",
+        name: "Dữ liệu Giao thoa (Cross-Domain)",
+        desc: "Dữ liệu kết nối 3 hệ sinh thái – Điểm khác biệt cốt lõi của UMP",
+        color: COLORS.teal,
+        glow: COLORS.tealGlow,
+        icon: "🔗",
+        children: [
+          {
+            id: "CR-LINK",
+            code: "CR-EDU×MED",
+            name: "Liên kết Đào tạo ↔ Y tế",
+            desc: "Dữ liệu giao giữa giảng dạy và lâm sàng",
+            items: [
+              "clinical_instructor: Giảng viên lâm sàng (BS kiêm GV)",
+              "teaching_hospital: BV thực hành (UMP Hospital / BV liên kết)",
+              "clinical_skill_log: Nhật ký kỹ năng lâm sàng SV",
+              "patient_encounter_edu: Lượt tiếp xúc BN cho đào tạo (de-identified)",
+              "simulation_scenario: Kịch bản mô phỏng (Sim Lab)",
+            ],
+          },
+          {
+            id: "CR-LINK2",
+            code: "CR-RES×MED",
+            name: "Liên kết Nghiên cứu ↔ Y tế",
+            desc: "Translational research – from bench to bedside",
+            items: [
+              "clinical_data_warehouse: Kho DL lâm sàng cho NC (CDW)",
+              "cohort_definition: Định nghĩa nhóm BN nghiên cứu",
+              "specimen_link: Liên kết mẫu sinh phẩm – BN",
+              "research_order: Y lệnh phục vụ nghiên cứu",
+              "outcome_measure: Chỉ số kết cục NC",
+            ],
+          },
+          {
+            id: "CR-LINK3",
+            code: "CR-EDU×RES",
+            name: "Liên kết Đào tạo ↔ Nghiên cứu",
+            desc: "Tích hợp NCKH vào chương trình đào tạo",
+            items: [
+              "research_course: Học phần NCKH / PPNC",
+              "student_research: Đề tài NCKH sinh viên",
+              "mentor_assignment: Phân công hướng dẫn khoa học",
+              "publication_student: Bài báo có SV đồng tác giả",
+              "research_output_academic: Sản phẩm NC quy đổi giờ giảng",
+            ],
+          },
+        ],
+      },
+    ];
+
+    const bobModules = [
+      { name: "Core ERP / Finance", vendor: "SAP S/4HANA hoặc Oracle Cloud", color: COLORS.accent, desc: "Tài chính, Kế toán, Mua sắm, Tài sản, Ngân sách – System of Record", role: "SoR" },
+      { name: "HRM / Payroll", vendor: "SAP SuccessFactors / Workday", color: COLORS.green, desc: "Nhân sự, Tuyển dụng, Lương, KPI, Đào tạo nội bộ", role: "BoB HR" },
+      { name: "SIS (Student Info System)", vendor: "Ellucian Banner / Unit4", color: COLORS.green, desc: "Tuyển sinh, ĐKHP, Điểm, Tốt nghiệp, Bằng cấp", role: "BoB Education" },
+      { name: "LMS", vendor: "Moodle / Canvas", color: COLORS.green, desc: "E-learning, Bài giảng, Quiz, Forum, Rubric", role: "BoB LMS" },
+      { name: "HIS / EMR", vendor: "InterSystems / Epic / FPT.eHospital", color: COLORS.rose, desc: "Khám bệnh, Nhập viện, Toa thuốc, CDSS, Nursing", role: "BoB Healthcare" },
+      { name: "LIS / RIS / PACS", vendor: "Roche / Agfa / Fuji", color: COLORS.rose, desc: "Xét nghiệm, Chẩn đoán hình ảnh, Lưu trữ ảnh y khoa", role: "BoB Diagnostics" },
+      { name: "Research Management", vendor: "Pure / Converis / DSpace", color: COLORS.purple, desc: "Đề tài, Publication, Grant, IRB, Biobank", role: "BoB Research" },
+      { name: "BI & Analytics", vendor: "Power BI / Tableau / Superset", color: COLORS.amber, desc: "Dashboard, KPI, Predictive, AI-driven insights", role: "Analytics" },
+      { name: "Integration Hub (EO)", vendor: "MuleSoft / WSO2 / Apache Camel", color: COLORS.cyan, desc: "API Gateway, ESB, ETL, MDM, Event Bus", role: "Orchestrator" },
+    ];
+
+    function TreeNode({ node, depth = 0, expanded, onToggle }) {
+      const isOpen = expanded[node.id];
+      const hasChildren = node.children && node.children.length > 0;
+
+      return (
+        <div style={{ marginLeft: depth > 0 ? 16 : 0 }}>
+          <div
+            onClick={() => hasChildren && onToggle(node.id)}
+            style={{
+              display: "flex",
+              alignItems: "flex-start",
+              gap: 10,
+              padding: "10px 14px",
+              marginBottom: 4,
+              borderRadius: 8,
+              background: depth === 0 ? node.glow : "transparent",
+              border: depth === 0 ? `1px solid ${node.color}33` : "1px solid transparent",
+              cursor: hasChildren ? "pointer" : "default",
+              transition: "all 0.15s ease",
+            }}
+            onMouseEnter={(e) => {
+              if (depth > 0) e.currentTarget.style.background = COLORS.surfaceHover;
+            }}
+            onMouseLeave={(e) => {
+              if (depth > 0) e.currentTarget.style.background = "transparent";
+            }}
+          >
+            {hasChildren && (
+              <span style={{ color: node.color || COLORS.accent, fontFamily: FONTS.mono, fontSize: 11, marginTop: 4, userSelect: "none", minWidth: 14 }}>
+                {isOpen ? "▼" : "▶"}
+              </span>
+            )}
+            <div style={{ flex: 1 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                {depth === 0 && <span style={{ fontSize: 18 }}>{node.icon}</span>}
+                <span style={{
+                  fontFamily: FONTS.mono, fontSize: 10, color: node.color || COLORS.accent,
+                  background: (node.color || COLORS.accent) + "22", padding: "2px 7px", borderRadius: 4, letterSpacing: 0.5,
+                }}>
+                  {node.code}
+                </span>
+                <span style={{
+                  fontFamily: depth === 0 ? FONTS.display : FONTS.body,
+                  fontSize: depth === 0 ? 16 : 14, fontWeight: depth === 0 ? 700 : 600, color: COLORS.text,
+                }}>
+                  {node.name}
+                </span>
+              </div>
+              <div style={{ fontFamily: FONTS.body, fontSize: 12, color: COLORS.textMuted, marginTop: 3 }}>{node.desc}</div>
             </div>
+          </div>
 
-            <div id="quiz-container">
-                <form id="quiz-form"></form>
+          {isOpen && hasChildren && (
+            <div style={{ borderLeft: `2px solid ${node.color || COLORS.accent}22`, marginLeft: 20, paddingLeft: 4 }}>
+              {node.children.map((child) =>
+                child.children ? (
+                  <TreeNode key={child.id} node={{ ...child, color: node.color, glow: node.glow }} depth={depth + 1} expanded={expanded} onToggle={onToggle} />
+                ) : (
+                  <div key={child.id} style={{ marginLeft: 16, marginBottom: 6 }}>
+                    <div style={{ padding: "8px 12px", borderRadius: 6, background: COLORS.surface, border: `1px solid ${COLORS.border}` }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+                        <span style={{
+                          fontFamily: FONTS.mono, fontSize: 10, color: node.color || COLORS.accent,
+                          background: (node.color || COLORS.accent) + "18", padding: "1px 6px", borderRadius: 3,
+                        }}>
+                          {child.code}
+                        </span>
+                        <span style={{ fontFamily: FONTS.body, fontSize: 13, fontWeight: 600, color: COLORS.text }}>{child.name}</span>
+                      </div>
+                      <div style={{ fontFamily: FONTS.body, fontSize: 11, color: COLORS.textDim, marginBottom: 6 }}>{child.desc}</div>
+                      {child.items && (
+                        <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
+                          {child.items.map((item, i) => (
+                            <span key={i} style={{
+                              fontFamily: FONTS.mono, fontSize: 10, color: COLORS.textMuted,
+                              background: COLORS.bg, padding: "3px 8px", borderRadius: 4,
+                              border: `1px solid ${COLORS.border}`, lineHeight: 1.4,
+                            }}>
+                              {item}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )
+              )}
             </div>
-
-            <div id="final-result-screen" style="display: none;">
-                <h2>Kết quả bài làm</h2>
-                <p id="final-score-text"></p>
-                
-                <div>
-                    <button class="modern-button btn-leaderboard" id="view-leaderboard-btn">Xem Bảng Xếp Hạng</button>
-                    <button class="modern-button btn-restart" onclick="location.reload()">Làm bài lại</button>
-                </div>
-            </div>
-
-            <div id="leaderboard-screen" style="display: none;">
-                <h2>Bảng Xếp Hạng (Trực Tuyến)</h2>
-                <div style="overflow-x: auto;">
-                    <table class="leaderboard-table">
-                        <thead>
-                            <tr>
-                                <th style="width: 10%;">Hạng</th>
-                                <th style="width: 40%;">Tên</th>
-                                <th style="width: 20%;">Điểm số</th>
-                                <th style="width: 30%;">Thời gian</th>
-                            </tr>
-                        </thead>
-                        <tbody id="leaderboard-body">
-                            <tr><td colspan="4" style="text-align:center;">Đang tải dữ liệu từ server...</td></tr>
-                        </tbody>
-                    </table>
-                </div>
-                <button class="modern-button btn-restart" onclick="location.reload()">Quay lại trang chủ</button>
-            </div>
+          )}
         </div>
-    </div>
+      );
+    }
 
-    <script type="module">
-        // Import các hàm cần thiết từ Firebase SDK
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
-        import { getDatabase, ref, push, onValue, query, orderByChild, limitToLast } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
+    function BoBDiagram() {
+      return (
+        <div>
+          <div style={{ fontFamily: FONTS.body, fontSize: 13, color: COLORS.textMuted, marginBottom: 20, lineHeight: 1.7 }}>
+            Mô hình <strong style={{ color: COLORS.amber }}>Best-of-Breed (BoB)</strong> cho phép UMP chọn hệ thống tốt nhất cho từng lĩnh vực,
+            thay vì phụ thuộc một nhà cung cấp ERP duy nhất. Tất cả được kết nối qua <strong style={{ color: COLORS.cyan }}>Enterprise Orchestrator (EO)</strong>.
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 6 }}>
+            {bobModules.map((m, i) => (
+              <div key={i} style={{
+                display: "flex", alignItems: "center", gap: 12, padding: "10px 14px",
+                background: m.color + "0a", border: `1px solid ${m.color}25`, borderRadius: 8, transition: "all 0.15s",
+              }}
+                onMouseEnter={e => { e.currentTarget.style.background = m.color + "18"; e.currentTarget.style.borderColor = m.color + "50"; }}
+                onMouseLeave={e => { e.currentTarget.style.background = m.color + "0a"; e.currentTarget.style.borderColor = m.color + "25"; }}
+              >
+                <div style={{ minWidth: 5, height: 36, background: m.color, borderRadius: 3, opacity: 0.8 }} />
+                <div style={{ flex: 1 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", marginBottom: 2 }}>
+                    <span style={{ fontFamily: FONTS.display, fontSize: 13, fontWeight: 700, color: COLORS.text }}>{m.name}</span>
+                    <span style={{ fontFamily: FONTS.mono, fontSize: 9, color: m.color, background: m.color + "20", padding: "2px 6px", borderRadius: 3 }}>{m.role}</span>
+                  </div>
+                  <div style={{ fontFamily: FONTS.body, fontSize: 11, color: COLORS.textDim }}>{m.desc}</div>
+                </div>
+                <div style={{ fontFamily: FONTS.mono, fontSize: 10, color: COLORS.textMuted, textAlign: "right", minWidth: 100, opacity: 0.7 }}>{m.vendor}</div>
+              </div>
+            ))}
+          </div>
 
-        // Cấu hình Firebase
-        const firebaseConfig = {
-            apiKey: "AIzaSyBKIkzONHTQZZcmQIkzG9avMM8kwG8Yzck",
-            databaseURL: "https://quanlychamcong-9dacd-default-rtdb.firebaseio.com"
-        };
+          <div style={{ marginTop: 20, padding: 14, background: COLORS.cyanGlow, border: `1px solid ${COLORS.cyan}30`, borderRadius: 8 }}>
+            <div style={{ fontFamily: FONTS.display, fontSize: 14, fontWeight: 700, color: COLORS.cyan, marginBottom: 10 }}>
+              🔑 Nguyên tắc BoB tại UMP
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+              {[
+                ["Loose Coupling", "Kết nối lỏng qua API, không phụ thuộc lẫn nhau"],
+                ["Single Source of Truth", "Mỗi thực thể chỉ có 1 Golden Record tại MDM"],
+                ["Event-Driven", "Giao tiếp bất đồng bộ qua Event Bus, đảm bảo near real-time"],
+                ["Replaceable", "Bất kỳ BoB nào cũng thay thế được mà không ảnh hưởng toàn cục"],
+              ].map(([title, desc], i) => (
+                <div key={i} style={{ padding: "8px 10px", background: COLORS.bg + "80", borderRadius: 6 }}>
+                  <div style={{ fontFamily: FONTS.mono, fontSize: 11, color: COLORS.cyan, fontWeight: 600, marginBottom: 2 }}>{title}</div>
+                  <div style={{ fontFamily: FONTS.body, fontSize: 11, color: COLORS.textMuted }}>{desc}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      );
+    }
 
-        const app = initializeApp(firebaseConfig);
-        const db = getDatabase(app);
+    function DataFlowView() {
+      const flows = [
+        {
+          title: "Luồng 1: Sinh viên đăng ký lâm sàng",
+          color: COLORS.green,
+          steps: [
+            { sys: "SIS", action: "SV đăng ký học phần lâm sàng" },
+            { sys: "EO", action: "Validate: SV đủ điều kiện? (prerequisite check)" },
+            { sys: "HIS", action: "Tạo tài khoản Trainee tại BV thực hành" },
+            { sys: "MDM", action: "Liên kết student_id ↔ clinical_trainee_id" },
+            { sys: "LMS", action: "Gán kịch bản Sim Lab + rubric đánh giá" },
+          ],
+        },
+        {
+          title: "Luồng 2: BS-GV nhận lương tổng hợp đa nguồn",
+          color: COLORS.amber,
+          steps: [
+            { sys: "HIS", action: "Tính công khám / ca trực / phẫu thuật" },
+            { sys: "SIS", action: "Tính giờ giảng / hướng dẫn / chấm thi" },
+            { sys: "Research", action: "Tính sản phẩm NCKH quy đổi" },
+            { sys: "EO", action: "Tổng hợp → employee_role_matrix" },
+            { sys: "HRM", action: "Tính lương tổng hợp (NSNN + viện phí + NC)" },
+          ],
+        },
+        {
+          title: "Luồng 3: Nghiên cứu lâm sàng chuyển dịch (Translational)",
+          color: COLORS.purple,
+          steps: [
+            { sys: "Research", action: "Đăng ký đề tài TNLS → IRB phê duyệt" },
+            { sys: "EO", action: "Tạo cohort_definition → truy vấn CDW" },
+            { sys: "HIS", action: "Trích xuất dữ liệu BN de-identified" },
+            { sys: "MDM", action: "Map ICD-10 + ATC code → biến NC" },
+            { sys: "BI", action: "Dashboard tiến độ + safety monitoring" },
+          ],
+        },
+        {
+          title: "Luồng 4: AI Agent – Dự đoán nguy cơ SV",
+          color: COLORS.rose,
+          steps: [
+            { sys: "SIS", action: "Điểm tích lũy, vắng mặt, trễ ĐKHP" },
+            { sys: "LMS", action: "Thời gian online, bài nộp, tương tác" },
+            { sys: "HIS", action: "Log kỹ năng lâm sàng (procedure count)" },
+            { sys: "EO/AI", action: "AI Agent tổng hợp → Risk Score" },
+            { sys: "SIS", action: "Cảnh báo tự động → Cố vấn học tập" },
+          ],
+        },
+      ];
 
-        // --- CÁC BIẾN & LOGIC CHÍNH ---
-        
-        // Dữ liệu 230 câu hỏi (Đã rút gọn để hiển thị, nhưng code này chứa đầy đủ danh sách)
-        const allQuestions = [
-            // CHƯƠNG 1
-            { id: 1, question: "Nền đường bao gồm:", options: { A: "Toàn bộ phần đào, đắp vật liệu trong phạm vi mặt cắt ngang thiết kế...", B: "Toàn bộ phần đào, đắp vật liệu... trừ phần thuộc kết cấu áo đường", C: "Toàn bộ phần đắp vật liệu... trừ phần thuộc kết cấu áo đường", D: "Toàn bộ phần đào đất... trừ phần thuộc kết cấu áo đường" }, answer: "B" },
-            { id: 2, question: "Hãy nêu tác dụng của nền đường?", options: { A: "Khắc phục địa hình thiên nhiên...", B: "Làm cơ sở cho áo đường...", C: "Cả A và B đều đúng", D: "Cả A và B đều sai" }, answer: "C" },
-            { id: 3, question: "Nền đường phải luôn đảm bảo ổn định về mặt cường độ, nghĩa là?", options: { A: "Cường độ mặt đường không thay đổi...", B: "Cường độ nền đường thay đổi...", C: "Cường độ nền đường không được thay đổi theo thời gian, thời tiết bất lợi", D: "Cường độ nền đường thay đổi theo thời gian thuận lợi" }, answer: "C" },
-            { id: 4, question: "Các yếu tố ảnh hưởng đến cường độ của nền đường gồm:", options: { A: "Vật liệu; Công nghệ thi công; Biện pháp thoát nước...", B: "Vật liệu; Chất lượng thi công; Biện pháp thoát nước...", C: "Cả A và B đúng", D: "Cả A và B sai" }, answer: "C" },
-            { id: 5, question: "Các yêu cầu đối với thi công nền đường:", options: { A: "Đảm bảo tính năng sử dụng tốt; Chọn phương pháp hợp lý", B: "Tuân thủ quy trình kỹ thuật và tiến độ", C: "Cả A và B đúng", D: "Cả A và B sai" }, answer: "C" },
-            { id: 6, question: "Trình tự và nội dung thi công nền đường:", options: { A: "Chuẩn bị; Công tác chính; Hoàn thiện", B: "Chuẩn bị; Công tác chính; Công tác phụ", C: "Chuẩn bị; Chuẩn bị kỹ thuật; Hoàn thiện", D: "Cả A, B, C đúng" }, answer: "A" },
-            { id: 7, question: "Các phương pháp thi công nền đường bao gồm:", options: { A: "Thủ công; Máy; Nổ phá", B: "Thủ công đơn giản; Máy hiện đại; Sức nước", C: "Thủ công; Máy; Nổ phá; Sức nước", D: "Kỹ nghệ; Máy; Nổ phá; Đào đá" }, answer: "C" },
-            { id: 8, question: "Phát biểu nào sau đây không đúng về thi công:", options: { A: "Thi công máy có ưu điểm năng suất cao...", B: "Thi công nổ phá nhanh chóng...", C: "Thi công thủ công chất lượng tốt và năng suất thấp...", D: "Thi công sức nước là lợi dụng sức nước xói vào đất..." }, answer: "C" },
-            { id: 9, question: "Phát biểu nào sau đây đúng nhất về thi công:", options: { A: "Thi công máy thích hợp khối lượng ít", B: "Thi công nổ phá dùng ở vùng đất yếu", C: "Thi công thủ công chất lượng tốt...", D: "Thi công sức nước là lợi dụng sức nước xói vào đất..." }, answer: "D" },
-            { id: 10, question: "Phát biểu nào sau đây đúng nhất:", options: { A: "Thi công máy thích hợp khối lượng lớn...", B: "Thi công nổ phá dùng ở nơi đá cứng...", C: "A và B đúng", D: "A và B sai" }, answer: "C" },
-            { id: 11, question: "Kết cấu mặt đường bao gồm:", options: { A: "Các lớp tầng mặt", B: "Tầng mặt và tầng móng", C: "Tầng mặt, tầng móng và nền đất", D: "Tầng mặt, tầng móng, đáy móng và nền đất" }, answer: "C" },
-            { id: 12, question: "Vật liệu để làm các lớp mặt đường gồm có:", options: { A: "Cốt liệu; nhựa đường, phụ gia", B: "Cốt liệu; chất kết dính, phụ gia", C: "Cốt liệu; ximăng, phụ gia", D: "Cốt liệu; vôi, phụ gia" }, answer: "B" },
-            { id: 13, question: "Yêu cầu đối với lớp mặt đường:", options: { A: "Đủ cường độ...", B: "Đủ cường độ, bằng phẳng...", C: "Đủ cường độ, ổn định, bằng phẳng, nhám, ít bụi", D: "Đủ cường độ, bằng phẳng, ít hư hỏng" }, answer: "C" },
-            { id: 14, question: "Các lớp móng đường có tác dụng chính là:", options: { A: "Đảm bảo biến dạng nền đường...", B: "Phân bố đều áp lực lên nền đất và bảo đảm biến dạng nền đường trong giới hạn", C: "Phân bố áp lực và chịu lực ngang", D: "Đảm bảo biến dạng móng đường..." }, answer: "B" },
-            { id: 15, question: "Tầng mặt đường áo đường mềm bao gồm các lớp:", options: { A: "Lớp hao mòn, lớp bảo vệ và các lớp chịu lực", B: "Lớp hao mòn, bảo vệ, chịu lực và móng", C: "Lớp hao mòn, bảo vệ, chịu lực, móng, đáy móng", D: "Lớp hao mòn, bảo vệ, chịu lực, móng, nền đường" }, answer: "A" },
-            { id: 16, question: "Tầng mặt kết cấu áo đường mềm thường làm bằng vật liệu:", options: { A: "Hỗn hợp hạt với nhựa đường", B: "Vật liệu hạt xử lý nhựa đường", C: "Cả A và C sai", D: "Cả A và C đúng" }, answer: "D" },
-            { id: 17, question: "Tầng móng kết cấu áo đường mềm thường được làm bằng vật liệu:", options: { A: "Vật liệu hạt không gia cố", B: "Vật liệu hạt gia cố vô cơ", C: "Vật liệu hạt gia cố hữu cơ", D: "Cả A, B, C đúng" }, answer: "D" },
-            { id: 18, question: "Cấu tạo chung kết cấu áo đường cứng gồm:", options: { A: "Tầng móng + tấm bê tông xi măng lớp mặt", B: "Tầng móng + bê tông nhựa", C: "Tầng móng + đá dăm đen", D: "Cả A, B, C đúng" }, answer: "A" },
-            { id: 19, question: "Hỗn hợp vật liệu thông thường xây dựng mặt đường gồm:", options: { A: "Cốt liệu, nhũ tương, phụ gia", B: "Cốt liệu, nhựa đường, phụ gia", C: "Cốt liệu, chất liên kết, phụ gia", D: "Cốt liệu, xi măng, phụ gia" }, answer: "C" },
-            { id: 20, question: "Chất liên kết trong hỗn hợp vật liệu áo đường bao gồm:", options: { A: "Vô cơ; Hữu cơ; Khác", B: "Vô cơ; Hữu cơ; Tự nhiên", C: "Vô cơ; Hữu cơ; Nhân tạo", D: "Tất cả A, B, C đúng" }, answer: "A" },
-            { id: 21, question: "Chất liên kết trong hỗn hợp vật liệu áo đường gồm:", options: { A: "Vôi, Xi măng, Bitum", B: "Vôi, Xi măng, Puzolan", C: "Vôi, Xi măng, chất liên kết rắn trong nước", D: "Vôi, chất liên kết hữu cơ, chất liên kết rắn trong nước, puzolan" }, answer: "D" },
-            { id: 22, question: "Các nguyên lý sử dụng vật liệu làm mặt đường gồm:", options: { A: "Đá chèn đá, lát xếp, cấp phối", B: "Đá chèn đá, cấp phối, gia cố", C: "Đá chèn đá, lát xếp, cấp phối, gia cố", D: "Đá chèn đá, cấp phối, gia cố, gia cố đất" }, answer: "C" },
-            { id: 23, question: "Đá dăm nước (Macadam) làm mặt đường theo nguyên lý:", options: { A: "Đá chèn đá", B: "Cấp phối", C: "Gia cố", D: "Lát xếp" }, answer: "A" },
-            { id: 24, question: "Đá dăm 4x6 kẹp đất dính làm mặt đường theo nguyên lý:", options: { A: "Cấp phối", B: "Đá chèn đá", C: "Lát xếp", D: "Gia cố" }, answer: "B" },
-            { id: 25, question: "Đá dăm 4x6 kẹp vữa xi măng làm mặt đường theo nguyên lý:", options: { A: "Đá chèn đá", B: "Cấp phối", C: "Gia cố", D: "Lát xếp" }, answer: "A" },
-            { id: 26, question: "Đá ba, đá hộc làm móng/gia cố rãnh theo nguyên lý:", options: { A: "Đá chèn đá", B: "Cấp phối", C: "Gia cố", D: "Lát xếp" }, answer: "D" },
-            { id: 27, question: "Cấp phối đá dăm làm mặt đường theo nguyên lý:", options: { A: "Đá chèn đá", B: "Cấp phối", C: "Gia cố", D: "Cả A và C" }, answer: "B" },
-            { id: 28, question: "Cấp phối thiên nhiên làm mặt đường theo nguyên lý:", options: { A: "Đá chèn đá", B: "Cấp phối", C: "Gia cố", D: "Lát xếp" }, answer: "B" },
-            { id: 29, question: "Cấp phối đá dăm gia cố xi măng làm mặt đường theo nguyên lý:", options: { A: "Gia cố", B: "Cấp phối", C: "Gia cố và cấp phối", D: "Lát xếp và gia cố" }, answer: "C" },
-            { id: 30, question: "Trình tự thi công kết cấu áo đường:", options: { A: "Chuẩn bị, móng, mặt", B: "Chuẩn bị, chính, hoàn thiện", C: "Chuẩn bị, móng, mặt, hoàn thiện", D: "Móng, mặt, hoàn thiện" }, answer: "C" },
-            { id: 31, question: "Phương án thi công lòng đường:", options: { A: "Đào lòng hoàn toàn, đắp lề một phần...", B: "Đắp lề hoàn toàn...", C: "Đào lòng hoàn toàn, đắp lề hoàn toàn, đào một phần đắp một phần", D: "Đắp lề hoàn toàn..." }, answer: "C" },
-            { id: 32, question: "Phát biểu nào sau đây KHÔNG đúng:", options: { A: "Nguyên lý cấp phối cốt liệu nhiều cỡ hạt...", B: "Độ chặt càng lớn cường độ càng cao", C: "Nhược điểm cấp phối là khó cơ giới hóa...", D: "Mặt đường BTXM, BTN làm việc theo nguyên lý cấp phối" }, answer: "D" },
-            { id: 33, question: "Phát biểu nào sau đây KHÔNG đúng về gia cố:", options: { A: "Gia cố đất dùng chất liên kết...", B: "Gia cố đất dùng vật liệu tại chỗ...", C: "Kiểu chèn móc cốt liệu đồng đều...", D: "Kiểu chèn móc có ưu điểm ít tốn công lu" }, answer: "D" },
-            { id: 34, question: "Mặt đường mềm dùng móng gia cố xi măng thì:", options: { A: "Móng chịu kéo uốn", B: "Ứng suất nén xuống nền nhỏ", C: "Cả A, B sai", D: "Cả A, B đúng" }, answer: "D" },
-            { id: 35, question: "Mặt đường mềm móng vật liệu hạt thì:", options: { A: "Độ cứng phụ thuộc nền đất và chiều dày móng", B: "Độ cứng không phụ thuộc nền đất", C: "Ứng suất nén xuống nền nhỏ hơn móng gia cố", D: "Ứng suất kéo uốn lớn" }, answer: "A" },
+      return (
+        <div>
+          <div style={{ fontFamily: FONTS.body, fontSize: 13, color: COLORS.textMuted, marginBottom: 20, lineHeight: 1.7 }}>
+            Minh họa cách <strong style={{ color: COLORS.cyan }}>Enterprise Orchestrator</strong> điều phối Master Data xuyên suốt 3 hệ sinh thái,
+            đảm bảo dữ liệu <strong style={{ color: COLORS.green }}>"Sạch – Sống"</strong> và sẵn sàng cho AI Agent tiêu thụ.
+          </div>
+          {flows.map((flow, fi) => (
+            <div key={fi} style={{ marginBottom: 14, padding: 14, background: flow.color + "08", border: `1px solid ${flow.color}20`, borderRadius: 10 }}>
+              <div style={{ fontFamily: FONTS.display, fontSize: 13, fontWeight: 700, color: flow.color, marginBottom: 10 }}>{flow.title}</div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+                {flow.steps.map((step, si) => (
+                  <div key={si} style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                    <div style={{
+                      minWidth: 22, height: 22, borderRadius: "50%", background: flow.color + "25", border: `2px solid ${flow.color}50`,
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      fontFamily: FONTS.mono, fontSize: 10, color: flow.color, fontWeight: 700,
+                    }}>{si + 1}</div>
+                    <span style={{
+                      fontFamily: FONTS.mono, fontSize: 10, color: flow.color, background: flow.color + "15",
+                      padding: "2px 8px", borderRadius: 4, minWidth: 55, textAlign: "center",
+                    }}>{step.sys}</span>
+                    <span style={{ fontFamily: FONTS.body, fontSize: 12, color: COLORS.textMuted }}>{step.action}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      );
+    }
 
-            // CHƯƠNG 2
-            { id: 36, question: "Mục đích đầm nén vật liệu cấp phối đá dăm:", options: { A: "Khí thoát ra ngoài", B: "Nước thoát ra ngoài", C: "Hạt nhỏ thoát ra ngoài", D: "Hạt mịn thoát ra ngoài" }, answer: "A" },
-            { id: 37, question: "Bản chất đầm nén vật liệu:", options: { A: "Tải trọng làm tăng độ chặt và modul đàn hồi", B: "Tải trọng làm giảm độ chặt...", C: "Tải trọng làm tăng độ chặt...", D: "Tải trọng gây biến dạng..." }, answer: "A" },
-            { id: 38, question: "Sức cản đầm nén thường gặp:", options: { A: "Cấu trúc, nhớt, lăn", B: "Cấu trúc, nhớt, quán tính", C: "Quán tính, nhớt, ma sát", D: "Cấu trúc, quán tính, bề mặt" }, answer: "B" },
-            { id: 39, question: "Nhân tố ảnh hưởng hiệu quả đầm nén:", options: { A: "Áp lực, chiều dày, tốc độ, loại lu", B: "Chiều dày, tốc độ, số lần, vật liệu", C: "Áp lực, chiều dày, tốc độ, số lần", D: "Áp lực, chiều dày, tốc độ, số lần, loại vật liệu" }, answer: "D" },
-            { id: 40, question: "Theo lý thuyết, độ chặt vật liệu sẽ:", options: { A: "Tăng không ngừng", B: "Giảm không ngừng", C: "Tăng đến cực trị", D: "Giảm đến cực trị" }, answer: "C" },
-            { id: 41, question: "Nguyên tắc chọn máy lu:", options: { A: "Đạt độ chặt...", B: "Đạt độ chặt, không phá hỏng cấu trúc, bề mặt bằng phẳng, ít công lu", C: "Bề mặt bằng phẳng...", D: "Tốn ít công lu nhất" }, answer: "B" },
-            { id: 42, question: "Số lượt lu qua một điểm trên sơ đồ lu (hình 1):", options: { A: "1, 2, 3 hoặc 4 điểm", B: "3 điểm", C: "4 điểm", D: "5 điểm" }, answer: "A" },
-            { id: 43, question: "Lu lèn trên đường thẳng, lu chạy:", options: { A: "Tim sang mép", B: "Mép sang tim", C: "Thấp lên cao", D: "Cả B và C" }, answer: "D" },
-            { id: 44, question: "Lu lèn trong đường cong, lu chạy:", options: { A: "Lưng xuống bụng", B: "Bụng lên lưng", C: "Vuông góc tim", D: "Cả A và C" }, answer: "B" },
-            { id: 45, question: "Chiều dài đoạn lu cấp phối đá dăm căn cứ:", options: { A: "Xe vận chuyển...", B: "Độ ẩm tốt nhất...", C: "Chiều dài hiệu quả lu", D: "Cả B và C" }, answer: "D" },
-            { id: 46, question: "Quyết định bề dày lu lèn cần xét:", options: { A: "Không quá lớn để đủ áp lực...", B: "Không nhỏ quá...", C: "Cả B và C đúng", D: "Cả B và C sai" }, answer: "A" },
-            { id: 47, question: "Giai đoạn đầu vật liệu mới rải, nên dùng lu:", options: { A: "Lu nặng", B: "Lu nhẹ", C: "Lu vừa", D: "Cả A và C" }, answer: "B" },
-            { id: 48, question: "Giai đoạn đầu vật liệu mới rải, KHÔNG nên dùng lu:", options: { A: "Lu nặng", B: "Lu nhẹ", C: "Lu vừa", D: "Cả A và C" }, answer: "A" },
-            { id: 49, question: "Giai đoạn đầu, dùng lu và tốc độ:", options: { A: "Nặng, nhanh", B: "Nhẹ, chậm", C: "Vừa, nhanh", D: "Nhẹ, nhanh" }, answer: "B" },
-            { id: 50, question: "Chất lượng đầm nén đánh giá bằng:", options: { A: "Modul đàn hồi hoặc độ chặt", B: "Độ ẩm tốt nhất", C: "Độ bằng phẳng", D: "Cả B và C" }, answer: "A" },
-            { id: 51, question: "Thiết kế sơ đồ lu cần đảm bảo:", options: { A: "Số lần đều, mặt phẳng...", B: "Tăng hiệu quả, số lần theo khối lượng, đạt công lu", C: "Số lần đều...", D: "Số lần theo khối lượng" }, answer: "B" },
-            { id: 52, question: "Đầm nén KHÔNG phát sinh sức cản nào:", options: { A: "Cấu trúc, nhớt", B: "Cấu trúc, quán tính", C: "Bề mặt, ma sát", D: "Quán tính" }, answer: "C" },
-            { id: 53, question: "Khi chọn lu cần xét:", options: { A: "Áp lực phù hợp vật liệu và diện tích tiếp xúc", B: "Áp lực phù hợp vật liệu và lớp vật liệu", C: "Áp lực phù hợp lu...", D: "Áp lực phù hợp chiều dày..." }, answer: "A" },
-            { id: 54, question: "Quyết định chiều dài thao tác lu dựa vào:", options: { A: "Kỹ thuật thi công, phối hợp dây chuyền", B: "Kỹ thuật lu", C: "Không tăng chiều dài nếu được", D: "A, B, C đúng" }, answer: "D" },
-            { id: 55, question: "Lu tầng móng, hành trình đầu cách mép lề tối thiểu:", options: { A: "20 cm", B: "15 cm", C: "10 cm", D: "5 cm" }, answer: "A" },
-            { id: 56, question: "Nguyên tắc chọn vận tốc lu:", options: { A: "Không quá lớn...", B: "Đủ lớn...", C: "A và B đúng", D: "A và B sai" }, answer: "C" },
-            { id: 57, question: "Nguyên tắc chọn vận tốc lu (2):", options: { A: "Lớn để tăng thời gian...", B: "Lớn nhất có thể", C: "A và B đúng", D: "A và B sai" }, answer: "D" },
-            { id: 58, question: "Nguyên tắc chọn bề dày lu lèn (1):", options: { A: "Không quá lớn...", B: "Không nhỏ quá...", C: "A và B sai", D: "A và B đúng" }, answer: "D" },
-            { id: 59, question: "Nguyên tắc chọn bề dày lu lèn (2):", options: { A: "Lớn để đảm bảo...", B: "Không nhỏ quá...", C: "A và B sai", D: "A và B đúng" }, answer: "C" },
-            { id: 60, question: "Số lượt đầm nén phụ thuộc:", options: { A: "Giai đoạn, vật liệu, chiều dày, trạng thái", B: "Tải trọng, tốc độ", C: "Chiều dày, tải trọng", D: "Tải trọng, tốc độ, chiều dày" }, answer: "A" },
-            { id: 61, question: "Mục đích thiết kế sơ đồ lu:", options: { A: "Tận dụng thiết bị", B: "Thao tác thuận lợi, năng suất cao...", C: "Đảm bảo kỹ thuật", D: "A, B, C đúng" }, answer: "D" },
-            { id: 62, question: "Nguyên tắc thiết kế sơ đồ lu:", options: { A: "Thấp tới cao, bụng lên lưng", B: "Mép vào giữa", C: "Vệt chồng 15-20cm", D: "A, B, C đúng" }, answer: "D" },
-            { id: 63, question: "Vận tốc lu lèn:", options: { A: "Đủ chậm để chặt, đủ lớn để năng suất", B: "Đảm bảo độ chặt, tăng năng suất", C: "Đủ lớn để năng suất", D: "A, B, C đúng" }, answer: "D" },
-            { id: 64, question: "Chiều dài đoạn đầm nén:", options: { A: "Đủ lớn để ít đổi số, đủ nhỏ để đất tốt", B: "Phối hợp nhịp nhàng, căn cứ thi công thử", C: "A và B đúng", D: "A và B sai" }, answer: "C" },
-            { id: 65, question: "Phát biểu nào KHÔNG đúng về lu lèn:", options: { A: "Chiều dài đủ lớn...", B: "Vận tốc đủ chậm...", C: "Lu thấp tới cao... chồng 15-20cm", D: "Số lượt phụ thuộc giai đoạn..." }, answer: "C" }, // Lưu ý: Câu này text gốc trong PDF có vẻ bị lỗi logic ở đáp án C hoặc D, tạm để C
+    function GovernanceView() {
+      const principles = [
+        {
+          icon: "🏛️", title: "Data Governance Framework", color: COLORS.accent,
+          items: [
+            { label: "Data Owner", desc: "Trưởng đơn vị chịu trách nhiệm chất lượng dữ liệu domain" },
+            { label: "Data Steward", desc: "Chuyên viên quản trị dữ liệu hàng ngày, enforce policy" },
+            { label: "Data Council", desc: "Hội đồng dữ liệu cấp trường – quyết định tiêu chuẩn & tranh chấp" },
+            { label: "Golden Record", desc: "Mỗi thực thể chỉ có 1 bản gốc duy nhất trong MDM" },
+          ],
+        },
+        {
+          icon: "🔄", title: "Nguyên tắc 'Sạch – Sống'", color: COLORS.green,
+          items: [
+            { label: "Sạch (Clean)", desc: "Data Quality Score ≥ 95%, validate tự động khi nhập" },
+            { label: "Sống (Live)", desc: "Real-time CDC – mọi thay đổi phản ánh ≤ 5 phút" },
+            { label: "Unique", desc: "Deduplication engine – không trùng lặp golden record" },
+            { label: "Traceable", desc: "Data Lineage – truy vết nguồn gốc mọi trường dữ liệu" },
+          ],
+        },
+        {
+          icon: "🛡️", title: "Bảo mật & Tuân thủ", color: COLORS.rose,
+          items: [
+            { label: "PHI Protection", desc: "Dữ liệu y tế mã hóa AES-256, tách biệt tenant" },
+            { label: "PII Masking", desc: "Thông tin cá nhân masking khi ra khỏi domain gốc" },
+            { label: "RBAC + ABAC", desc: "Phân quyền theo vai trò + thuộc tính (khoa/campus/BN)" },
+            { label: "Consent Mgmt", desc: "Quản lý đồng ý BN cho nghiên cứu / đào tạo" },
+          ],
+        },
+        {
+          icon: "🤖", title: "AI-Ready Architecture", color: COLORS.purple,
+          items: [
+            { label: "Vector Embedding", desc: "Master Data embedding cho RAG pipeline" },
+            { label: "Feature Store", desc: "Kho đặc trưng chuẩn hóa cho ML model" },
+            { label: "Semantic Layer", desc: "Ontology mapping ICD-10 / SNOMED / HL7 FHIR" },
+            { label: "Agent Permission", desc: "AI Agent phân quyền truy cập MD theo scope" },
+          ],
+        },
+      ];
 
-            // CHƯƠNG 3
-            { id: 66, question: "Không dùng đất nào đắp nền:", options: { A: "Đất bùn, than bùn, hữu cơ >10%", B: "Sét trương nở >3%, muối >5%", C: "Cả A và B đúng", D: "A và B sai" }, answer: "C" },
-            { id: 67, question: "Được dùng đất nào đắp nền:", options: { A: "Đất bùn...", B: "Sét trương nở...", C: "Cả A và B đúng", D: "A và B sai" }, answer: "D" },
-            { id: 68, question: "Trường hợp KHÔNG cần thiết kế xử lý nền tự nhiên:", options: { A: "Nền đắp cao...", B: "Mặt nền lẫn đá...", C: "Cả A và B đúng", D: "Cả A và B sai" }, answer: "D" },
-            { id: 69, question: "Trường hợp CẦN thiết kế xử lý nền tự nhiên:", options: { A: "Nền đắp cao, đá, vật liệu nhẹ, hồ ao...", B: "Mặt nền lẫn đá...", C: "Cả A và B đúng", D: "Cả A và B sai" }, answer: "A" },
-            { id: 70, question: "Quy định đầm nén (1):", options: { A: "Cao đến thấp...", B: "Thấp đến cao, đè 1/2...", C: "Thấp đến cao, chồng 5-10cm...", D: "Cả A, B, C sai" }, answer: "D" },
-            { id: 71, question: "Quy định đầm nén (2):", options: { A: "Cao đến thấp...", B: "Thấp đến cao, đè 1/4...", C: "Thấp đến cao, chồng 5-10cm...", D: "Đều, thấp đến cao, chồng 15-20cm, đè 1/3 vệt" }, answer: "D" },
-            { id: 72, question: "Kiểm tra chất lượng đắp đất:", options: { A: "Mỗi lớp kiểm tra ít nhất 2 điểm/1000m2", B: "Đạt độ chặt K tối thiểu", C: "Phương pháp rót cát, dao vòng...", D: "Cả A, B, C đúng" }, answer: "D" },
-            { id: 73, question: "Bề rộng đắp mỗi lớp nên rộng hơn thiết kế:", options: { A: "15-20 cm", B: "10-15 cm", C: "5-10 cm", D: "20-50 cm" }, answer: "D" },
-            { id: 74, question: "Đắp đoạn tiếp giáp, bề dày lớp chỉ nên:", options: { A: "15-20 cm", B: "10-20 cm", C: "5-10 cm", D: "20-50 cm" }, answer: "A" },
-            { id: 75, question: "Độ chặt đoạn tiếp giáp phải đạt:", options: { A: ">= 0.98 (Cao tốc, I, II), >= 0.95 (Khác)", B: ">= 0.95 (Cao tốc...), >= 0.90", C: ">= 0.95", D: ">= 0.90" }, answer: "A" },
-            { id: 76, question: "Nền sườn dốc, đánh cấp khi dốc ngang:", options: { A: "< 20%", B: "40%", C: "> 50%", D: "Cả A, B, C sai" }, answer: "B" },
-            { id: 77, question: "Nền sườn dốc, chỉ đào bỏ hữu cơ khi dốc ngang:", options: { A: "< 20%", B: "< 10%", C: "< 30%", D: "< 50%" }, answer: "A" },
-            { id: 78, question: "Nền sườn dốc, làm công trình chống đỡ khi dốc ngang:", options: { A: "> 20%", B: "20-50%", C: "> 50%", D: "> 40%" }, answer: "C" },
-            { id: 79, question: "Biện pháp đánh cấp áp dụng khi dốc:", options: { A: "< 20%", B: "20-50%", C: "> 50%", D: "Sai hết" }, answer: "B" },
-            { id: 80, question: "Kiểm tra nghiệm thu nền đường gồm:", options: { A: "Biên bản", B: "Yếu tố hình học", C: "Cây cỏ, tầng phòng hộ", D: "Cả A, B, C đúng" }, answer: "D" },
-            { id: 81, question: "Kiểm tra chất lượng nền đào:", options: { A: "Loại đất, không kiểm tra đổ", B: "Loại đất, mái taluy, việc đổ đất", C: "Mái taluy, đổ đất", D: "Chỉ kiểm tra loại đất" }, answer: "B" },
-            { id: 82, question: "TCVN 9436, nền đắp cao tốc (30cm trên), CBR min:", options: { A: "8%", B: "7%", C: "6%", D: "5%" }, answer: "A" },
-            { id: 83, question: "TCVN 9436, nền đắp cao tốc (30-80cm), CBR min:", options: { A: "8%", B: "7%", C: "6%", D: "5%" }, answer: "C" },
-            { id: 84, question: "TCVN 9436, nền cấp III, IV (30cm trên), CBR min:", options: { A: "8%", B: "7%", C: "6%", D: "5%" }, answer: "C" },
-            { id: 85, question: "TCVN 9436, nền cấp III, IV (30-80cm), CBR min:", options: { A: "7%", B: "6%", C: "5%", D: "4%" }, answer: "D" },
+      return (
+        <div>
+          <div style={{ fontFamily: FONTS.body, fontSize: 13, color: COLORS.textMuted, marginBottom: 20, lineHeight: 1.7 }}>
+            <strong style={{ color: COLORS.accent }}>Data Governance</strong> là xương sống đảm bảo Master Data luôn đáng tin cậy.
+            Khung quản trị 4 trụ cột cho UMP:
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+            {principles.map((p, i) => (
+              <div key={i} style={{ padding: 14, background: p.color + "08", border: `1px solid ${p.color}20`, borderRadius: 10 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+                  <span style={{ fontSize: 18 }}>{p.icon}</span>
+                  <span style={{ fontFamily: FONTS.display, fontSize: 13, fontWeight: 700, color: p.color }}>{p.title}</span>
+                </div>
+                {p.items.map((item, j) => (
+                  <div key={j} style={{ marginBottom: 6, padding: "6px 8px", background: COLORS.bg + "60", borderRadius: 6 }}>
+                    <div style={{ fontFamily: FONTS.mono, fontSize: 11, color: p.color, fontWeight: 600, marginBottom: 1 }}>{item.label}</div>
+                    <div style={{ fontFamily: FONTS.body, fontSize: 11, color: COLORS.textDim, lineHeight: 1.4 }}>{item.desc}</div>
+                  </div>
+                ))}
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+    }
 
-            // CHƯƠNG 4
-            { id: 86, question: "Mặt đường đá dăm nước là:", options: { A: "Đá cường độ cao, nguyên lý cấp phối", B: "Đá đều, nguyên lý cấp phối", C: "Đá cường độ cao, thấm tốt, nguyên lý đá chèn đá", D: "Đá đều, nguyên lý đá chèn đá" }, answer: "C" },
-            { id: 87, question: "Ưu điểm mặt đường đá dăm nước:", options: { A: "Cường độ cao...", B: "Cường độ cao, tận dụng vật liệu, thi công dễ...", C: "Thi công dễ, rẻ...", D: "Thi công dễ..." }, answer: "B" },
-            { id: 88, question: "Nhược điểm mặt đường đá dăm nước:", options: { A: "Không chịu tải nặng", B: "Không chịu tải động, dễ bong bật...", C: "Yêu cầu đá cao...", D: "Tất cả A, B, C đúng" }, answer: "D" },
-            { id: 89, question: "Chiều dày tối thiểu lớp đá dăm nước (50-25mm):", options: { A: "6 cm", B: "7 cm", C: "8 cm", D: "10 cm" }, answer: "A" },
-            { id: 90, question: "Chiều dày tối đa lớp đá dăm nước (50-25mm):", options: { A: "10 cm", B: "12 cm", C: "15 cm", D: "20 cm" }, answer: "C" },
-            { id: 91, question: "Chỉ tiêu cốt liệu đá dăm nước:", options: { A: "Cường độ nén, LA, thoi dẹt, bụi, mềm yếu", B: "LA, thoi dẹt...", C: "Cường độ nén, thoi dẹt...", D: "Cường độ nén, LA..." }, answer: "A" },
-            { id: 92, question: "Cường độ nén đá gốc (mama) cho mặt đường:", options: { A: ">= 40", B: ">= 50", C: ">= 70", D: ">= 100" }, answer: "C" },
-            { id: 93, question: "Cường độ nén đá gốc cho móng:", options: { A: ">= 40", B: ">= 50", C: ">= 70", D: ">= 80" }, answer: "D" }, // Check logic later
-            { id: 94, question: "Cường độ nén đá trầm tích cho mặt đường:", options: { A: ">= 40", B: ">= 50", C: ">= 70", D: ">= 80" }, answer: "B" }, // Check logic later
-            { id: 95, question: "Cường độ nén đá trầm tích cho móng:", options: { A: ">= 40", B: ">= 50", C: ">= 60", D: ">= 70" }, answer: "C" }, // Check logic later
-            { id: 96, question: "Độ hao mòn LA cốt liệu mặt:", options: { A: "<= 15%", B: "<= 18%", C: "<= 20%", D: "<= 28%" }, answer: "D" },
-            { id: 97, question: "Độ hao mòn LA cốt liệu móng trên:", options: { A: "<= 25%", B: "<= 28%", C: "<= 30%", D: "<= 35%" }, answer: "D" }, // Check logic
-            { id: 98, question: "Độ hao mòn LA cốt liệu móng dưới:", options: { A: "<= 28%", B: "<= 30%", C: "<= 35%", D: "<= 40%" }, answer: "D" },
-            { id: 99, question: "Hàm lượng thoi dẹt cốt liệu mặt/móng trên:", options: { A: "<= 5%", B: "<= 7%", C: "<= 10%", D: "<= 15%" }, answer: "D" },
-            { id: 100, question: "Đá dăm 4x6 là:", options: { A: "Trên 40 lọt 60", B: "Trên 40 không lọt 60", C: "Dưới 40 lọt 60", D: "Sai hết" }, answer: "A" },
-            { id: 101, question: "Đá dăm 5x7 là:", options: { A: "Trên 50 lọt 70", B: "Trên 50 không lọt 70", C: "Dưới 50 không lọt 70", D: "Sai hết" }, answer: "A" },
-            { id: 102, question: "Đá dăm 1x2 là:", options: { A: "Trên 10 lọt 20", B: "Dưới 10 lọt 20", C: "Trên 10 không lọt 20", D: "Sai hết" }, answer: "A" },
-            { id: 103, question: "Vật liệu chèn đá dăm nước:", options: { A: "Giới hạn chảy >20, dẻo <6...", B: "Chảy <20, dẻo >6...", C: "Chảy <20, dẻo <6, lọt 0.075 <10%", D: "Chảy <20, dẻo <6, lọt 0.075 <5%" }, answer: "C" },
-            { id: 104, question: "Chuẩn bị thi công đá dăm nước:", options: { A: "Nền, móng phải bằng phẳng, chặt, nghiệm thu", B: "Không nghiệm thu", C: "Chỉ nền nghiệm thu", D: "Chỉ móng nghiệm thu" }, answer: "A" },
-            { id: 105, question: "Rải đá dăm trên đường cũ:", options: { A: "Cào xới, rải đá, thoát nước", B: "Cào xới, sửa trắc ngang", C: "Cào xới, sửa, phẳng", D: "Cào xới, rải đá, thoát nước, phẳng" }, answer: "D" },
-            { id: 106, question: "Thi công cơ giới đá dăm nước cần:", options: { A: "Xe quét, lu nặng 10-12T rồi nhẹ...", B: "Xe quét, lu nhẹ, lu nặng...", C: "Tưới nước, lu nhẹ, lu nặng...", D: "A, B, C đúng" }, answer: "D" }, // Check logic
-            { id: 107, question: "Thi công thủ công đá dăm nước cần:", options: { A: "Lu nhẹ, vừa, nặng...", B: "Lu nặng, vừa...", C: "Tưới nước, xe cải tiến... lu nhẹ, nặng...", D: "A, B, C đúng" }, answer: "C" },
-            { id: 108, question: "Thi công thử 100m để:", options: { A: "Xác định thông số, công lu", B: "Thông số, đầm nén, tiến độ", C: "Thông số, công lu, tổ chức, cường độ", D: "Thông số đầm nén" }, answer: "A" },
-            { id: 109, question: "Giai đoạn lu lèn đá dăm nước:", options: { A: "Xếp - Vừa - Chặt - Hoàn thiện", B: "Xếp - Rung - Chặt - Hoàn thiện", C: "Xếp - Chặt - Hoàn thiện", D: "Xếp - Hoàn thiện - Phẳng" }, answer: "C" },
-            { id: 110, question: "Lu lèn tiến lùi bắt đầu:", options: { A: "Mép vào tim", B: "Tim ra mép", C: "Chồng 1/2 bánh", D: "Cả A và C" }, answer: "D" },
-            { id: 111, question: "Trình tự thi công đá dăm nước:", options: { A: "Thanh chắn - Cốt liệu thô - Lu thô - Chèn - Tưới - Dính kết - Hoàn thiện - Bảo trì", B: "... Chèn cốt liệu nhỏ...", C: "... Rải cốt liệu nhỏ...", D: "... Nghiệm thu" }, answer: "A" }, // Needs verification
-            { id: 112, question: "Kiểm tra giám sát gồm:", options: { A: "Trước thi công", B: "Trong thi công", C: "Sau thi công", D: "Tất cả" }, answer: "D" },
-            { id: 113, question: "Kiểm tra kích thước hình học gồm:", options: { A: "Dày, rộng, dốc ngang", B: "Dày, rộng, phẳng", C: "Dày, rộng, cường độ", D: "Tất cả" }, answer: "A" },
-            { id: 114, question: "Cấp phối thiên nhiên là:", options: { A: "Hạt có sẵn, 3-5mm...", B: "Hạt có sẵn, nguyên lý cấp phối", C: "Hạt 4x6", D: "Hạt 2x4" }, answer: "B" },
-            { id: 115, question: "Thành phần hạt cấp phối thiên nhiên:", options: { A: "50, 25, 9.5...", B: "50, 37.5, 9.5...", C: "50, 37.5, 25...", D: "50, 25..." }, answer: "C" }, // Approximation
-            { id: 116, question: "Chỉ tiêu cấp phối thiên nhiên:", options: { A: "Loại, chảy, dẻo, CBR, LA, dẹt", B: "Loại, chảy, dẻo, CBR, LA, lọt sàng 200", C: "Loại, chảy, dẻo, CBR, LA, lọt 0.075", D: "Loại, cường độ, chảy..." }, answer: "A" },
-            { id: 117, question: "Trình tự thi công cấp phối thiên nhiên:", options: { A: "Chuẩn bị - Vận chuyển - San - Lu - Bảo dưỡng", B: "Chuẩn bị - Vận chuyển - Lu - Bảo dưỡng", C: "Chuẩn bị - Vận chuyển - San - Bảo dưỡng", D: "Chuẩn bị - San - Lu - Bảo dưỡng" }, answer: "A" },
-            { id: 118, question: "San rải cấp phối, dày mỗi lớp:", options: { A: "Không quá 15cm", B: "Không quá 20cm", C: "Không quá 35cm", D: "Không quá 30cm" }, answer: "A" }, // Or B depending on standard
-            { id: 119, question: "Thi công thử đoạn rải để:", options: { A: "Tính chiều dày, đánh giá vật liệu, tiến độ, độ chặt", B: "Tính chiều dày, thời gian lu", C: "Tính chiều dày, thời gian lu, quan hệ độ ẩm", D: "Quan hệ độ ẩm" }, answer: "A" },
-            { id: 120, question: "Gặp mưa khi thi công cấp phối:", options: { A: "Ngừng", B: "Đợi khô", C: "Làm tiếp", D: "Cả A và B" }, answer: "D" },
-            { id: 121, question: "Kiểm tra hình học cấp phối:", options: { A: "Rộng, dày, dốc mặt và lề", B: "Dày, dài, dốc", C: "Rộng, dài, dốc", D: "Rộng, dài, dày" }, answer: "A" },
-            { id: 122, question: "Cấp phối đá dăm loại I:", options: { A: "Là cấp phối hạt", B: "Nghiền từ đá nguyên khai", C: "Đồng kích cỡ 4x6", D: "Cả A và B" }, answer: "D" },
-            { id: 123, question: "Cấp phối đá dăm loại II:", options: { A: "Cấp phối hạt", B: "Nghiền từ đá hoặc sỏi cuội", C: "Cỡ 4x6", D: "Cỡ 2x4" }, answer: "B" }, // Logic check
-            { id: 124, question: "Đá gốc làm cấp phối đá dăm phải đảm bảo:", options: { A: "Nén 80 (móng trên)...", B: "Nén 80 (móng trên), 30 (móng dưới)", C: "Nén 60 (trên), 40 (dưới)", D: "Nén 60 (trên), 30 (dưới)" }, answer: "C" },
-            { id: 125, question: "Cỡ hạt Dmax TCVN 8859:", options: { A: "37.5, 25, 19", B: "50, 37.5, 25, 19", C: "50, 37.5, 31.5, 25, 19", D: "50, 37.5, 31.5, 25, 19, 12.5" }, answer: "C" },
-            { id: 126, question: "CPĐD Dmax=37.5 dùng:", options: { A: "Móng dưới", B: "Móng trên", C: "Bù vênh", D: "Tất cả" }, answer: "D" },
-            { id: 127, question: "CPĐD Dmax=25 dùng:", options: { A: "Móng dưới", B: "Móng trên", C: "Bù vênh", D: "Tất cả" }, answer: "D" },
-            { id: 128, question: "Độ chặt Kyc CPĐD loại I, II:", options: { A: "95", B: "96", C: "97", D: ">= 98" }, answer: "D" },
-            { id: 129, question: "Chuẩn bị mặt bằng CPĐD:", options: { A: "Khôi phục cọc, độ chặt, bù vênh", B: "Khôi phục, độ chặt lu lèn", C: "Khôi phục, phẳng", D: "Khôi phục, hình học" }, answer: "A" },
-            { id: 130, question: "Độ ẩm thi công CPĐD:", options: { A: "W +/- 2%", B: "W +/- 3%", C: "W +/- 4%", D: "W +/- 5%" }, answer: "A" },
-            { id: 131, question: "Chiều dày rải tối đa CPĐD:", options: { A: "12 cm", B: "15 cm", C: "18 cm", D: "20 cm" }, answer: "C" }, // Or 15
-            { id: 132, question: "Lu lèn CPĐD:", options: { A: "Nhẹ + Rung/Lốp", B: "Rung/Lốp + Cứng + Hoàn thiện", C: "Rung/Lốp + Cứng + Hoàn thiện (khác)", D: "Nhẹ + Rung/Lốp + Cứng + Nhẹ" }, answer: "D" },
-            { id: 133, question: "Móng đất gia cố vô cơ là:", options: { A: "Đất trộn vôi/xi măng lu lèn", B: "Cấp phối trộn", C: "Đá dăm đen", D: "Đá 4x6" }, answer: "A" },
-            { id: 134, question: "Tính chất cơ lý đất gia cố:", options: { A: "Nén, kéo uốn", B: "Nén, kéo uốn, modul, ngâm nước", C: "Ngâm nước", D: "Modul" }, answer: "B" }, // Or A
-            { id: 135, question: "Thành phần vật liệu đất gia cố:", options: { A: "Đất + Xi măng/Vôi + Nước + Phụ gia", B: "Đất + Nhũ tương...", C: "Đất + Bitum...", D: "Tất cả" }, answer: "A" },
-            { id: 136, question: "Trình tự thi công đất gia cố:", options: { A: "Tơi đất - Trộn cát/chất gia cố - Đầm - Bảo dưỡng", B: "Tơi - Trộn chất gia cố - Đầm - Bảo dưỡng", C: "Tơi - Nước - Trộn - Đầm", D: "Tơi - Nước - Cát..." }, answer: "A" },
-            { id: 137, question: "Trình tự gia cố xi măng/vôi:", options: { A: "Chuẩn bị - Cày - Tơi - Rải - Trộn khô - Ẩm - Trộn ẩm - San - Đầm - Hoàn thiện", B: "... Rải...", C: "... Trộn khô...", D: "... Rải..." }, answer: "A" },
-            { id: 138, question: "Thí nghiệm hỗn hợp đất gia cố:", options: { A: "Thành phần hạt...", B: "Độ ẩm tốt nhất, KLTT khô, nén...", C: "A và B đúng", D: "A và B sai" }, answer: "C" },
-            { id: 139, question: "Cấp độ bền vật liệu gia cố (TCVN 10379):", options: { A: "4", B: "3", C: "2", D: "1" }, answer: "B" }, // Check
-            { id: 140, question: "Chỉ tiêu cơ lý sau biến cứng (TCVN 10379):", options: { A: "Nén, ép chẻ 28 ngày", B: "Nén 7, 28; Ép chẻ 28", C: "Nén 7; Ép chẻ 28", D: "Nén 14, 28; Ép chẻ 28" }, answer: "D" },
-            { id: 141, question: "Thí nghiệm trước khi gia cố:", options: { A: "Lý hóa đất, cơ lý hóa chất kết dính", B: "Cơ lý hỗn hợp", C: "Cả A và B", D: "Chỉ lý hóa" }, answer: "C" },
-            { id: 142, question: "Đất dùng gia cố xi măng:", options: { A: "Bùn...", B: "Muối...", C: "Đất được phép đắp nền", D: "A và B đúng" }, answer: "C" },
-            { id: 143, question: "Đất KHÔNG dùng gia cố xi măng:", options: { A: "Bùn, hữu cơ >10%, nở >3%", B: "Muối >5%, chảy >45...", C: "Đất đắp nền", D: "A và B đúng" }, answer: "D" },
-            { id: 144, question: "CPĐD/CPTN gia cố xi măng là:", options: { A: "Đá chèn đá + xi măng", B: "Lát xếp + xi măng", C: "Cấp phối + xi măng + lu lèn", D: "Gia cố + xi măng" }, answer: "C" },
-            { id: 145, question: "Lớp chống nứt phản ảnh:", options: { A: "Chuyển tiếp, hấp phụ ứng suất", B: "Hạn chế hấp thụ", C: "A và B đúng", D: "A và B sai" }, answer: "A" },
-            { id: 146, question: "Dmax CPĐD gia cố xi măng:", options: { A: "50, 37.5...", B: "31.5, 25...", C: "25...", D: "37.5, 31.5, 25, 19" }, answer: "D" },
-            { id: 147, question: "LA CPĐD gia cố móng trên:", options: { A: "30", B: "35", C: "40", D: "45" }, answer: "A" }, // Or C? Usually stricter.
-            { id: 148, question: "LA CPĐD gia cố móng dưới:", options: { A: "30", B: "35", C: "40", D: "45" }, answer: "C" },
-            { id: 149, question: "Lượng xi măng thêm vào thực tế so với thí nghiệm:", options: { A: "0.5%", B: "0.4%", C: "0.3%", D: "0.2%" }, answer: "A" },
-            { id: 150, question: "Tuổi mẫu cường độ móng gia cố:", options: { A: "17 ngày", B: "16 ngày", C: "15 ngày", D: "14 ngày" }, answer: "D" },
-            { id: 151, question: "Lượng xi măng cho CPĐD:", options: { A: "3-6%", B: "2.5-6%", C: "4-6%", D: "4-10%" }, answer: "A" },
-            { id: 152, question: "Lượng xi măng cho CPTN:", options: { A: "3-6%", B: "2.5-6%", C: "4-6%", D: "4-10%" }, answer: "A" }, // Check
-            { id: 153, question: "Thiết bị lu lèn CPĐD gia cố:", options: { A: "Lu rung 7T + 10-15T + Bánh sắt", B: "Lu rung 10-12T + 7T...", C: "A và B đúng", D: "A và B sai" }, answer: "C" },
-            { id: 154, question: "Sai số độ ẩm CP gia cố:", options: { A: "-1%", B: "-1.5%", C: "-2%", D: "-2.5%" }, answer: "C" },
-            { id: 155, question: "Cường độ mẫu khoan hiện trường đạt bao nhiêu % thiết kế:", options: { A: "85%", B: "75%", C: "65%", D: "50%" }, answer: "B" }, // Or A?
-            { id: 156, question: "Bảo dưỡng CP gia cố ít nhất:", options: { A: "17 ngày", B: "16 ngày", C: "15 ngày", D: "14 ngày" }, answer: "D" },
-            { id: 157, question: "Trộn tại đường CPTN gia cố:", options: { A: "Trạm trộn...", B: "Trộn đường, đầm...", C: "Trộn đường, san, đầm, hoàn thiện", D: "Trạm trộn..." }, answer: "C" },
-            { id: 158, question: "Giải pháp kiểm soát nứt phản ảnh:", options: { A: "Đá nhựa", B: "Lưới thủy tinh", C: "Khe giả", D: "A, B, C đúng" }, answer: "D" },
-            { id: 159, question: "Khoảng lượng xi măng CPĐD:", options: { A: "1.5 +/- 3", B: "2.5 +/- 6", C: "4 +/- 10", D: "5 +/- 15" }, answer: "A" }, // Needs check
-            { id: 160, question: "Khoảng lượng xi măng CPTN:", options: { A: "1.5 +/- 3", B: "2.5 +/- 6", C: "4 +/- 10", D: "5 +/- 15" }, answer: "A" },
-            { id: 161, question: "Cường độ nén 14 ngày móng trên:", options: { A: ">= 4.0", B: ">= 4.5", C: ">= 5.0", D: "Không" }, answer: "A" }, // Check
-            { id: 162, question: "Cường độ nén 14 ngày móng dưới:", options: { A: ">= 4.0", B: ">= 2.5", C: ">= 1.5", D: "Không" }, answer: "B" }, // Check
-            { id: 163, question: "Cường độ ép chẻ 14 ngày móng trên:", options: { A: ">= 0.35", B: ">= 0.40", C: ">= 0.45", D: "Không" }, answer: "B" }, // Check
-            { id: 164, question: "Phát biểu KHÔNG đúng (1):", options: { A: "CPĐD là đá nghiền...", B: "CPTN là có sẵn...", C: "Trộn xi măng lu lèn...", D: "Lớp chuyển tiếp không có khả năng hấp phụ ứng suất" }, answer: "D" },
-            { id: 165, question: "Phát biểu KHÔNG đúng (2):", options: { A: "Loại I móng trên...", B: "Loại II móng dưới...", C: "Chỉ Loại I móng dưới cứng", D: "Loại I nghiền 100%" }, answer: "C" }, // Check
+    const TABS = [
+      { id: "tree", label: "🌳 Cây Master Data", desc: "Cấu trúc thư mục chi tiết" },
+      { id: "bob", label: "🧩 Mô hình BoB", desc: "Best-of-Breed Architecture" },
+      { id: "flow", label: "⚡ Luồng Dữ liệu", desc: "Data Flow cross-domain" },
+      { id: "gov", label: "🛡️ Quản trị DL", desc: "Governance & AI-Ready" },
+    ];
 
-            // CHƯƠNG 5
-            { id: 166, question: "BTN nóng là:", options: { A: "Cốt liệu + nhũ tương", B: "Cốt liệu + nhựa đường nóng", C: "Cốt liệu + nhựa đường + phụ gia, trộn nóng, rải nóng", D: "Sai hết" }, answer: "C" },
-            { id: 167, question: "BTN chặt (BTNC):", options: { A: "Gián đoạn...", B: "Liên tục, Dmax <=25, có bột khoáng...", C: "Hở...", D: "Bán hở..." }, answer: "B" },
-            { id: 168, question: "Độ rỗng dư là:", options: { A: "Thể tích lỗ rỗng nhỏ giữa các hạt đã bọc nhựa", B: "Thể tích lỗ rỗng...", C: "A và B", D: "Khác" }, answer: "A" },
-            { id: 169, question: "Chiều dày hợp lý BTNC 12.5:", options: { A: "5-7", B: "6-8", C: "4-5", D: "7-9" }, answer: "C" },
-            { id: 170, question: "Chiều dày hợp lý BTNC 19:", options: { A: "5-7", B: "6-8", C: "4-5", D: "7-9" }, answer: "A" }, // Usually 5-7 or 6-8
-            { id: 171, question: "Hỗn hợp chặt nóng (TCVN 13567):", options: { A: "Rỗng 7-12%", B: "Rỗng 3-6%", C: "Rỗng 4-6%", D: "Rỗng 3-7%" }, answer: "B" }, // Check standard
-            { id: 172, question: "Cỡ hạt lớn nhất danh định:", options: { A: "Sót không quá 10%", B: "Lọt 100%", C: "Sót >10%", D: "Lọt 100%" }, answer: "A" },
-            { id: 173, question: "Cỡ hạt lớn nhất:", options: { A: "Sót <10%", B: "Lọt 100%", C: "Sót >10%", D: "Lọt 100%" }, answer: "D" },
-            { id: 174, question: "Định nghĩa độ rỗng dư (2):", options: { A: "Thể tích hạt", B: "Thể tích nhựa", C: "Thể tích lỗ rỗng nhỏ biểu thị % thể tích mẫu", D: "Hạt và nhựa" }, answer: "C" },
-            { id: 175, question: "Độ rỗng dư BTNC thông thường:", options: { A: "3-6%", B: "7-12%", C: "4-8%", D: "8-12%" }, answer: "A" },
-            { id: 176, question: "Phân loại BTNC theo Dmax:", options: { A: "5 loại", B: "6 loại", C: "3 loại", D: "4 loại" }, answer: "A" }, // C9.5, 12.5, 19, 25... check
-            { id: 177, question: "BTNC 12.5 nghĩa là:", options: { A: "Dmax=9.5", B: "Dmax=12.5", C: "Dmax=19", D: "Dmax danh định 12.5" }, answer: "D" },
-            { id: 178, question: "Cốt liệu nhỏ là:", options: { A: "Lọt 2.36, trên 0.075", B: "Lọt 4.75, trên 0.075", C: "Lọt 1.18", D: "Lọt 0.6" }, answer: "B" }, // Usually sand < 4.75
-            { id: 179, question: "Cốt liệu lớn là:", options: { A: "Trên 4.75", B: "Trên 9.5", C: "Trên 12.5", D: "Trên 16" }, answer: "A" },
-            { id: 180, question: "Thời gian từ tưới thấm bám nhựa lỏng đến rải:", options: { A: "24h", B: "8h", C: "12h", D: "4h" }, answer: "A" }, // Check
-            { id: 181, question: "Thời gian từ tưới thấm bám nhũ tương đến rải:", options: { A: "24h", B: "8h", C: "12h", D: "4h" }, answer: "D" }, // Check
-            { id: 182, question: "Thời gian từ tưới dính bám nhựa lỏng đến rải:", options: { A: "24h", B: "8h", C: "4h", D: "2h" }, answer: "C" }, // Check
-            { id: 183, question: "Chỉ tiêu kỹ thuật BTNC:", options: { A: "Chày đầm, ổn định, dẻo, rỗng, vệt hằn...", B: "Ổn định còn lại...", C: "Lấp đầy nhựa...", D: "Kháng mỏi" }, answer: "C" }, // List is long
-            { id: 184, question: "Thành phần vật liệu BTN:", options: { A: "Cốt liệu, bột khoáng, nhựa, phụ gia", B: "Cốt liệu, cát...", C: "Cốt liệu, bột...", D: "Lớn, nhỏ, bột, nhựa, phụ gia" }, answer: "D" },
-            { id: 185, question: "Độ dính bám đá nhựa cấp:", options: { A: "2", B: "3", C: "4", D: "Sai" }, answer: "C" }, // Usually level 4
-            { id: 186, question: "Mục đích thiết kế BTN:", options: { A: "Tỷ lệ, độ rỗng", B: "Tỷ lệ vật liệu khoáng, hàm lượng nhựa tối ưu", C: "Cấp phối tối ưu", D: "Cường độ tối ưu" }, answer: "B" },
-            { id: 187, question: "Nhiệt độ bắt đầu lu lèn nhựa 60/70:", options: { A: "115", B: "100", C: "110", D: "120" }, answer: "D" },
-            { id: 188, question: "Nhiệt độ kết thúc lu lèn nhựa 60/70:", options: { A: "80", B: "70", C: "95", D: "50" }, answer: "A" },
-            { id: 189, question: "Nhiệt độ thông xe:", options: { A: "65", B: "50", C: "60", D: "55" }, answer: "B" },
-            { id: 190, question: "Nhiệt độ xả hỗn hợp 60/70:", options: { A: "110-120", B: "120-130", C: "130-135", D: "145-165" }, answer: "D" },
-            { id: 191, question: "Thiết bị lu lèn tối thiểu:", options: { A: "Thép nặng + Hơi", B: "Thép nhẹ + Chân cừu + Hơi", C: "Thép nhẹ + Thép nặng + Hơi", D: "Thép nhẹ" }, answer: "C" },
-            { id: 192, question: "Kiểm tra vật liệu sản xuất:", options: { A: "Cốt liệu, phụ gia, nhựa", B: "Cốt liệu, bụi, nhựa", C: "Cốt liệu, bột khoáng, nhựa", D: "Nhiệt độ" }, answer: "C" },
-            { id: 193, question: "Kiểm tra hình học nghiệm thu:", options: { A: "Rộng, dốc, dày, cao độ, phẳng", B: "Nhám", C: "Cao độ", D: "Kháng trượt" }, answer: "A" },
-            { id: 194, question: "Kiểm tra IRI:", options: { A: "Lớp trên cùng <=1km...", B: "Bắt buộc lớp trên cùng trừ cấp IV", C: "A và B đúng", D: "A và B sai" }, answer: "C" },
-            { id: 195, question: "Nghiệm thu độ rỗng dư mẫu khoan:", options: { A: "Cho phép 8%, K>=0.99", B: "Cho phép 7%, K>=0.98", C: "Thiết kế 5-6% -> cho phép 8%, K>=0.98", D: "Cho phép 7%, K>=0.99" }, answer: "C" },
-            { id: 196, question: "Nghiệm thu mối nối:", options: { A: "Mắt", B: "Thước", C: "Kinh vĩ", D: "A, B, C đúng" }, answer: "D" },
-            { id: 197, question: "Hồ sơ nghiệm thu:", options: { A: "Vật liệu, thiết kế...", B: "Rải thử...", C: "Sơ bộ...", D: "Tất cả vật liệu, thiết kế, rải thử, nhật ký..." }, answer: "D" },
-            { id: 198, question: "Độ rỗng dư cho phép (nếu thiết kế 5-6%):", options: { A: "6.5%", B: "7%", C: "7.5%", D: "8%, K>=0.99" }, answer: "B" }, // Check logic vs 195
-            { id: 199, question: "Đánh giá dính bám lớp dưới:", options: { A: "Mắt", B: "Thí nghiệm", C: "A và B", D: "Sai" }, answer: "C" }, // Or A?
-            { id: 200, question: "Thông xe khi nhiệt độ giảm dưới:", options: { A: "70", B: "60", C: "50", D: "40" }, answer: "C" },
+    function UMPMasterData() {
+      const [activeTab, setActiveTab] = useState("tree");
+      const [expanded, setExpanded] = useState({ PH0: true, PH1: true });
 
-            // CHƯƠNG 6
-            { id: 201, question: "Áo đường cứng là:", options: { A: "Mặt BTXM cốt thép...", B: "Mặt BTXM, móng vật liệu khác", C: "Mặt CP gia cố", D: "Mặt vữa" }, answer: "B" },
-            { id: 202, question: "Công nghệ thi công BTXM:", options: { A: "Ván khuôn gỗ...", B: "Ván khuôn ray, trượt, DBI", C: "Ván khuôn ray, đơn giản...", D: "Tổ hợp" }, answer: "B" },
-            { id: 203, question: "Cường độ BTXM căn cứ:", options: { A: "Cấp đường, tốc độ", B: "Loại tầng mặt", C: "Tuổi mẫu", D: "Quy trình" }, answer: "A" },
-            { id: 204, question: "Tuổi mẫu cường độ BTXM:", options: { A: "3, 56", B: "3, 14", C: "3, 28", D: "3, 7" }, answer: "C" },
-            { id: 205, question: "Cường độ nén 28 ngày cấp IV:", options: { A: "37", B: "40", C: "42", D: "42.5" }, answer: "D" }, // Check standard
-            { id: 206, question: "Cường độ kéo uốn 28 ngày cấp IV:", options: { A: "6.5", B: "5.0", C: "4.5", D: "3.5" }, answer: "D" }, // Check
-            { id: 207, question: "Cát cho BTXM nguồn gốc:", options: { A: "Đá nghiền", B: "Sông sạch", C: "Trộn", D: "Tất cả" }, answer: "D" },
-            { id: 208, question: "Độ sụt công nghệ đơn giản:", options: { A: "5-10", B: "10-15", C: "20-40", D: "45-50" }, answer: "C" },
-            { id: 209, question: "Cường độ nén bê tông nghèo:", options: { A: "7", B: "10", C: "8", D: "9" }, answer: "B" }, // Check
-            { id: 210, question: "Chuẩn bị thi công BTXM:", options: { A: "Công nghệ, xe máy, hồ sơ, trạm, lu nền", B: "Công nghệ... chuẩn bị nền móng", C: "Xe lu móng", D: "..." }, answer: "B" },
-            { id: 211, question: "Thời gian rải xong (30-35 độ C):", options: { A: "0.6h", B: "0.8h", C: "1.0h", D: "0.9h" }, answer: "C" }, // Check
-            { id: 212, question: "Đình chỉ thi công khi:", options: { A: "Mưa, gió cấp 6", B: "Mưa, gió cấp 6, nóng >40, lạnh <5", C: "Lạnh <5", D: "Nóng >40" }, answer: "B" },
-            { id: 213, question: "Tránh thi công buổi trưa khi nhiệt độ:", options: { A: "15", B: "20", C: "30", D: "40" }, answer: "C" }, // Or D?
-            { id: 214, question: "Hệ số cường độ chế thử bê tông nghèo:", options: { A: "1.15-1.25", B: "1.15-1.2", C: "1.05-1.2", D: "1.15-1.5" }, answer: "A" }, // Check
-            { id: 215, question: "Kéo uốn cấp III trở xuống:", options: { A: "5.0", B: "4.5", C: "4.0", D: "3.5" }, answer: "C" }, // Check
-            { id: 216, question: "Độ mài mòn cấp IV trở xuống:", options: { A: "0.8", B: "0.7", C: "0.6", D: "0.3" }, answer: "C" }, // Check
-            { id: 217, question: "Cường độ chế thử cao hơn thiết kế:", options: { A: "1.15-1.3", B: "1.05-1.2", C: "1.15-1.2", D: "1.05-1.3" }, answer: "A" },
-            { id: 218, question: "Dmax đá dăm BTXM:", options: { A: "37.5", B: "31.5", C: "25", D: "19" }, answer: "A" },
-            { id: 219, question: "Modul độ lớn cát sông:", options: { A: "2.0-3.5", B: "2.2-3.0", C: "2.2-3.5", D: "2.5-3.5" }, answer: "D" },
-            { id: 220, question: "Khe dọc giả khi bề rộng rải >:", options: { A: "6.0", B: "5.5", C: "5.0", D: "4.5" }, answer: "D" },
-            { id: 221, question: "Thời gian bảo dưỡng theo cường độ đạt:", options: { A: "50%", B: "60%", C: "70%", D: "80%" }, answer: "D" },
-            { id: 222, question: "Bột đá lẫn cốt liệu thô:", options: { A: "1.0%", B: "1.5%", C: "2.0%", D: "3.0%" }, answer: "D" }, // Check
-            { id: 223, question: "Dùng cát nghiền yêu cầu:", options: { A: "Không phụ gia", B: "Phải phụ gia giảm nước", C: "Thêm xi măng", D: "Thêm nước" }, answer: "B" },
-            { id: 224, question: "Lớp ngăn cách móng và mặt:", options: { A: "Đá dăm/bê tông nghèo", B: "Đá nhựa", C: "Giấy dầu/vải địa", D: "Tất cả" }, answer: "D" },
-            { id: 225, question: "Yêu cầu chuẩn bị:", options: { A: "Công nghệ... nền móng", B: "Xe lu", C: "Nhân công", D: "Vật liệu" }, answer: "A" },
-            { id: 226, question: "Cấu tạo chung BTXM:", options: { A: "Tấm, khe, móng, nền", B: "Tấm, dãn cách...", C: "Tấm, thép...", D: "Tất cả" }, answer: "D" },
-            { id: 227, question: "Trình tự thi công BTXM:", options: { A: "Móng... Ván khuôn...", B: "Móng... Vận chuyển", C: "Móng, vật liệu, xử lý, ván khuôn, thép, trộn, rải, hoàn thiện, khe, bảo dưỡng, nghiệm thu", D: "Móng..." }, answer: "C" },
-            { id: 228, question: "Nhược điểm BTXM:", options: { A: "Độ bền thấp...", B: "Khó sửa, tầm nhìn kém", C: "Khó sửa, bảo dưỡng dài, mối nối gây không thoải mái", D: "Độ bền thấp..." }, answer: "C" },
-            { id: 229, question: "Phát biểu KHÔNG đúng BTXM:", options: { A: "Nhược điểm khó sửa...", B: "Cấu tạo...", C: "Lớp ngăn cách đá dăm nhỏ/BT nghèo", D: "Cát nghiền dùng phụ gia" }, answer: "C" }, // Check
-            { id: 230, question: "Phát biểu ĐÚNG NHẤT BTXM:", options: { A: "Nhược điểm độ bền thấp...", B: "Cường độ căn cứ cấp đường, tốc độ", C: "Cát nghiền không phụ gia", D: "Bảo dưỡng 80%" }, answer: "B" }
-        ];
+      const onToggle = useCallback((id) => {
+        setExpanded((prev) => ({ ...prev, [id]: !prev[id] }));
+      }, []);
 
-        // --- HẾT PHẦN DỮ LIỆU CÂU HỎI ---
+      const expandAll = () => {
+        const all = {};
+        masterDataTree.forEach((n) => { all[n.id] = true; });
+        setExpanded(all);
+      };
+      const collapseAll = () => setExpanded({});
 
-        const script_elements = {
-            quizForm: document.getElementById('quiz-form'),
-            timerDisplay: document.getElementById('timer-display'),
-            setupContainer: document.getElementById('setup-container'),
-            quizContainer: document.getElementById('quiz-container'),
-            startButton: document.getElementById('start-button'),
-            shuffleButton: document.getElementById('shuffle-button'),
-            submitButton: document.getElementById('submit-button'),
-            finalResultScreen: document.getElementById('final-result-screen'),
-            stickyHeader: document.getElementById('sticky-header'),
-            mainContainer: document.getElementById('main-container'),
-            contentPadding: document.getElementById('content-padding'),
-            usernameInput: document.getElementById('username-input'),
-            userCredit: document.getElementById('user-credit'),
-            leaderboardScreen: document.getElementById('leaderboard-screen'),
-            leaderboardBody: document.getElementById('leaderboard-body'),
-            viewLeaderboardBtn: document.getElementById('view-leaderboard-btn')
-        };
-        
-        let score = 0;
-        let timerInterval;
-        let quizData = [];
-        const incorrectlyAttemptedQuestions = []; 
-        let currentUsername = "";
+      return (
+        <div style={{
+          fontFamily: FONTS.body, background: COLORS.bg, color: COLORS.text,
+          minHeight: "100vh", padding: "24px 16px", maxWidth: 880, margin: "0 auto",
+        }}>
+          <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&family=Source+Sans+3:wght@400;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
 
-        // ----------------------------------------------------
-        // Logic Firebase (Giữ nguyên)
-        // ----------------------------------------------------
+          <div style={{ textAlign: "center", marginBottom: 28 }}>
+            <div style={{ fontFamily: FONTS.mono, fontSize: 10, color: COLORS.cyan, letterSpacing: 3, textTransform: "uppercase", marginBottom: 6 }}>
+              ĐẠI HỌC Y DƯỢC TP.HCM — ERP MASTER DATA ARCHITECTURE
+            </div>
+            <h1 style={{ fontFamily: FONTS.display, fontSize: 26, fontWeight: 800, color: COLORS.text, margin: "0 0 6px 0", lineHeight: 1.2 }}>
+              Cây Thư mục <span style={{ color: COLORS.cyan }}>Master Data</span>
+            </h1>
+            <div style={{ fontFamily: FONTS.body, fontSize: 12, color: COLORS.textDim, maxWidth: 560, margin: "0 auto" }}>
+              Kiến trúc dữ liệu dùng chung cho 3 hệ sinh thái: Đào tạo · Nghiên cứu · Y tế — Mô hình BoB + Enterprise Orchestrator
+            </div>
+          </div>
 
-        function saveScoreToLeaderboard(name, score) {
-            const now = new Date();
-            const dateString = now.toLocaleDateString('vi-VN') + ' ' + now.toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit'});
-            
-            push(ref(db, 'quiz_leaderboard'), {
-                name: name,
-                score: score,
-                timestamp: dateString,
-                createdAt: Date.now()
-            });
-        }
+          <div style={{ display: "flex", gap: 5, marginBottom: 16, overflowX: "auto", paddingBottom: 2 }}>
+            {TABS.map((tab) => (
+              <button key={tab.id} onClick={() => setActiveTab(tab.id)} style={{
+                flex: "1 1 0", minWidth: 130, padding: "9px 10px", borderRadius: 8,
+                border: activeTab === tab.id ? `1px solid ${COLORS.borderActive}` : `1px solid ${COLORS.border}`,
+                background: activeTab === tab.id ? COLORS.accentGlow : COLORS.surface,
+                color: activeTab === tab.id ? COLORS.accent : COLORS.textMuted,
+                cursor: "pointer", fontFamily: FONTS.body, fontSize: 12, fontWeight: 600, textAlign: "center", transition: "all 0.15s", lineHeight: 1.3,
+              }}>
+                <div>{tab.label}</div>
+                <div style={{ fontSize: 10, fontWeight: 400, opacity: 0.7, marginTop: 2 }}>{tab.desc}</div>
+              </button>
+            ))}
+          </div>
 
-        function renderLeaderboardData() {
-            const topScoresRef = query(ref(db, 'quiz_leaderboard'), orderByChild('score'), limitToLast(50));
-            
-            onValue(topScoresRef, (snapshot) => {
-                const data = [];
-                snapshot.forEach((childSnapshot) => {
-                    data.push(childSnapshot.val());
-                });
-                
-                data.reverse();
+          <div style={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 12, padding: 18, minHeight: 400 }}>
+            {activeTab === "tree" && (
+              <div>
+                <div style={{ display: "flex", gap: 6, marginBottom: 14 }}>
+                  <button onClick={expandAll} style={{
+                    padding: "5px 12px", borderRadius: 6, border: `1px solid ${COLORS.border}`,
+                    background: COLORS.surface, color: COLORS.textMuted, cursor: "pointer", fontFamily: FONTS.mono, fontSize: 11,
+                  }}>▼ Mở tất cả</button>
+                  <button onClick={collapseAll} style={{
+                    padding: "5px 12px", borderRadius: 6, border: `1px solid ${COLORS.border}`,
+                    background: COLORS.surface, color: COLORS.textMuted, cursor: "pointer", fontFamily: FONTS.mono, fontSize: 11,
+                  }}>▶ Đóng tất cả</button>
+                </div>
+                {masterDataTree.map((node) => (
+                  <TreeNode key={node.id} node={node} depth={0} expanded={expanded} onToggle={onToggle} />
+                ))}
+              </div>
+            )}
+            {activeTab === "bob" && <BoBDiagram />}
+            {activeTab === "flow" && <DataFlowView />}
+            {activeTab === "gov" && <GovernanceView />}
+          </div>
 
-                let html = '';
-                if (data.length === 0) {
-                    html = '<tr><td colspan="4" style="text-align:center;">Chưa có dữ liệu. Hãy là người đầu tiên!</td></tr>';
-                } else {
-                    data.forEach((entry, index) => {
-                        let rankClass = '';
-                        if (index === 0) rankClass = 'rank-1';
-                        else if (index === 1) rankClass = 'rank-2';
-                        else if (index === 2) rankClass = 'rank-3';
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 8, marginTop: 14 }}>
+            {[
+              { label: "Domain chính", value: "6", color: COLORS.accent },
+              { label: "Nhóm MD", value: "22", color: COLORS.green },
+              { label: "Thực thể", value: "120+", color: COLORS.purple },
+              { label: "BoB Systems", value: "9", color: COLORS.cyan },
+            ].map((s, i) => (
+              <div key={i} style={{
+                textAlign: "center", padding: "10px 6px", background: s.color + "08",
+                border: `1px solid ${s.color}20`, borderRadius: 8,
+              }}>
+                <div style={{ fontFamily: FONTS.display, fontSize: 20, fontWeight: 800, color: s.color }}>{s.value}</div>
+                <div style={{ fontFamily: FONTS.body, fontSize: 11, color: COLORS.textDim, marginTop: 2 }}>{s.label}</div>
+              </div>
+            ))}
+          </div>
 
-                        html += `<tr>
-                            <td class="${rankClass}">#${index + 1}</td>
-                            <td style="font-weight: 500;">${entry.name}</td>
-                            <td style="font-weight: bold; color: var(--primary-color);">${entry.score}</td>
-                            <td style="color: #777; font-size: 0.9em;">${entry.timestamp}</td>
-                        </tr>`;
-                    });
-                }
-                script_elements.leaderboardBody.innerHTML = html;
-            });
-        }
+          <div style={{ textAlign: "center", marginTop: 20, fontFamily: FONTS.mono, fontSize: 10, color: COLORS.textDim, letterSpacing: 1 }}>
+            UMP ERP MASTER DATA v1.0 · 2025 · Enterprise Architecture Division
+          </div>
+        </div>
+      );
+    }
 
-        window.showLeaderboard = function(fromSetup = false) {
-            renderLeaderboardData();
-            script_elements.setupContainer.style.display = 'none';
-            script_elements.quizContainer.style.display = 'none';
-            script_elements.finalResultScreen.style.display = 'none';
-            script_elements.leaderboardScreen.style.display = 'block';
-        };
-
-        script_elements.viewLeaderboardBtn.addEventListener('click', () => {
-            window.showLeaderboard();
-        });
-
-        // ----------------------------------------------------
-        // Logic Quiz (Giữ nguyên)
-        // ----------------------------------------------------
-
-        function shuffleArray(array) {
-            for (let i = array.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [array[i], array[j]] = [array[j], array[i]];
-            }
-        }
-        
-        function prepareQuestions() {
-            quizData = allQuestions; 
-            quizData.forEach((q, index) => {
-                q.id = index + 1; 
-            });
-        }
-
-        script_elements.shuffleButton.addEventListener('click', () => {
-            shuffleArray(quizData);
-            script_elements.shuffleButton.textContent = 'Đã xáo trộn!';
-            script_elements.shuffleButton.classList.add('shuffled');
-            script_elements.shuffleButton.disabled = true;
-        });
-
-        script_elements.startButton.addEventListener('click', () => {
-            const nameInput = script_elements.usernameInput.value.trim();
-            if (!nameInput) {
-                alert("Vui lòng nhập tên của bạn để bắt đầu!");
-                script_elements.usernameInput.focus();
-                return;
-            }
-            currentUsername = nameInput;
-            script_elements.userCredit.textContent = currentUsername;
-
-            script_elements.setupContainer.style.display = 'none';
-            script_elements.quizContainer.style.display = 'block';
-            script_elements.stickyHeader.style.display = 'flex';
-            script_elements.submitButton.style.display = 'block';
-            
-            const selectedTimeInput = document.querySelector('input[name="time"]:checked');
-            const durationInMinutes = selectedTimeInput ? parseInt(selectedTimeInput.value) : 45;
-            startTimer(durationInMinutes);
-
-            renderQuiz();
-        });
-
-        script_elements.submitButton.addEventListener('click', () => {
-            if (confirm('Bạn có chắc chắn muốn nộp bài không?')) {
-                endQuiz();
-            }
-        });
-
-        function renderQuiz() {
-            let html = '';
-            quizData.forEach((q, index) => {
-                const correctAnswerText = q.options[q.answer];
-                let optionsArray = Object.keys(q.options).map(key => ({ key, text: q.options[key] }));
-                shuffleArray(optionsArray);
-
-                const shuffledOptions = {};
-                let newAnswerKey = '';
-                const newKeys = ['A', 'B', 'C', 'D', 'E'];
-
-                optionsArray.forEach((option, i) => {
-                    const currentKey = newKeys[i];
-                    shuffledOptions[currentKey] = option.text;
-                    if (option.text === correctAnswerText) {
-                        newAnswerKey = currentKey;
-                    }
-                });
-                
-                q.shuffledAnswer = newAnswerKey;
-
-                html += `<div class="question-block" id="q-block-${q.id}">`;
-                html += `<p class="question-text">${index + 1}. ${q.question}</p>`;
-                
-                html += `<fieldset id="fs-${q.id}">`;
-                html += `<div class="options-container">`;
-                for (const key in shuffledOptions) {
-                    html += `<div>
-                                <label>
-                                    <input type="radio" name="q${q.id}" value="${key}">
-                                    <span>${key}. ${shuffledOptions[key]}</span>
-                                </label>
-                            </div>`;
-                }
-                html += `</div></fieldset></div>`;
-            });
-            script_elements.quizForm.innerHTML = html;
-        }
-
-        function handleAnswerSelection(event) {
-            const selectedRadio = event.target;
-            if (selectedRadio.tagName !== 'INPUT' || selectedRadio.type !== 'radio') return;
-
-            const questionId = parseInt(selectedRadio.name.substring(1));
-            const userAnswer = selectedRadio.value;
-            
-            const questionData = quizData.find(q => q.id === questionId);
-            if (!questionData || questionData.answeredCorrectly) {
-                return;
-            }
-
-            const block = document.getElementById(`q-block-${questionId}`);
-            block.classList.remove('correct', 'incorrect');
-            Array.from(block.querySelectorAll('.options-container div')).forEach(div => {
-                div.classList.remove('incorrect-option', 'correct-selection');
-            });
-
-            const isCorrect = userAnswer === questionData.shuffledAnswer;
-            const selectedLabelDiv = selectedRadio.closest('div');
-
-            if (isCorrect) {
-                block.classList.add('correct');
-                selectedLabelDiv.classList.add('correct-selection');
-                document.getElementById(`fs-${questionId}`).disabled = true;
-                questionData.answeredCorrectly = true;
-
-                if (!incorrectlyAttemptedQuestions.includes(questionId)) {
-                    score++;
-                }
-            } else {
-                block.classList.add('incorrect');
-                selectedLabelDiv.classList.add('incorrect-option');
-
-                if (!incorrectlyAttemptedQuestions.includes(questionId)) {
-                    incorrectlyAttemptedQuestions.push(questionId);
-                }
-            }
-        }
-
-        function startTimer(minutes) {
-            let duration = minutes * 60;
-            timerInterval = setInterval(() => {
-                const mins = Math.floor(duration / 60);
-                let secs = duration % 60;
-                secs = secs < 10 ? '0' + secs : secs;
-
-                script_elements.timerDisplay.textContent = `${mins}:${secs}`;
-                
-                if (duration < 60 && !script_elements.timerDisplay.classList.contains('ending')) {
-                    script_elements.timerDisplay.classList.add('ending');
-                }
-
-                if (--duration < 0) {
-                    endQuiz(true);
-                }
-            }, 1000);
-        }
-
-        function endQuiz(isTimeOut = false) {
-            clearInterval(timerInterval);
-            if (isTimeOut) {
-                alert("Đã hết giờ làm bài!");
-            }
-            
-            script_elements.stickyHeader.style.display = 'none';
-            script_elements.quizContainer.style.display = 'none';
-            script_elements.submitButton.style.display = 'none';
-
-            const totalQuestions = quizData.length;
-            document.getElementById('final-score-text').textContent = `Chúc mừng ${currentUsername}! Bạn đã đạt: ${score} / ${totalQuestions} điểm`;
-            script_elements.finalResultScreen.style.display = 'block';
-
-            saveScoreToLeaderboard(currentUsername, score);
-        }
-        
-        prepareQuestions();
-        script_elements.quizForm.addEventListener('click', handleAnswerSelection);
-    </script>
+    const root = ReactDOM.createRoot(document.getElementById("root"));
+    root.render(<UMPMasterData />);
+  </script>
 </body>
 </html>
